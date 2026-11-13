@@ -25,6 +25,7 @@ psram:
   speed: 80MHz
 
 logger:
+  hardware_uart: UART0
 
 wifi:
   ssid: !secret wifi_ssid
