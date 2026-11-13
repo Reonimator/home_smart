@@ -48,7 +48,7 @@ time:
     id: sntp_time
     timezone: MSK-3
     on_time_sync:
-      - script.execute: clock
+      - script.execute: upd_clock
 
 font:
   - {file: "gfonts://Roboto", id: f_small, size: 20, glyphsets: [GF_Latin_Core, GF_Cyrillic_Core]}
@@ -174,7 +174,7 @@ script:
           snprintf(b, sizeof(b), "%.1f°", id(night_t)); ST(id(s_nt), b);
           snprintf(b, sizeof(b), "%.1f°", id(away_t)); ST(id(s_at), b);
           snprintf(b, sizeof(b), "%d мин", id(sleep_min)); ST(id(s_sl), b);
-  - id: clock
+  - id: upd_clock
     then:
       - lambda: |-
           static const char *DN[7] = {"Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"};
@@ -217,7 +217,7 @@ interval:
   - interval: 20s
     then:
       - script.execute: compute
-      - script.execute: clock
+      - script.execute: upd_clock
 
 sensor:''')
 for i in range(1,8):
