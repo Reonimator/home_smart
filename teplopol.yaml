@@ -1,0 +1,416 @@
+esphome:
+  name: teplopol
+  platformio_options:
+    board_build.flash_mode: dout
+
+esp8266:
+  board: esp01_1m
+  restore_from_flash: true
+
+preferences:
+  flash_write_interval: 2min
+
+logger:
+  baud_rate: 0
+  level: INFO
+
+wifi:
+  ssid: "A-M"
+  password: !secret wifi_password
+  ap:
+    ssid: "Teplopol-Setup"
+    password: "12345678"
+
+captive_portal:
+
+ota:
+  - platform: esphome
+  - platform: web_server
+
+web_server:
+  port: 80
+  version: 3
+  local: true
+
+i2c:
+  sda: GPIO2
+  scl: GPIO3
+  scan: true
+
+ads1115:
+  - address: 0x48
+    id: ads1
+  - address: 0x49
+    id: ads2
+
+# ---------- Датчики пола: напряжение -> сопротивление -> °C ----------
+sensor:
+  # 1 Балкон (плата 1, A0)
+  - {platform: ads1115, ads1115_id: ads1, multiplexer: A0_GND, gain: 4.096, id: v1, update_interval: 15s, internal: true}
+  - {platform: resistance, sensor: v1, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res1, internal: true}
+  - platform: ntc
+    sensor: res1
+    id: t1
+    name: "Пол 1 Балкон"
+    calibration: {b_constant: 3950, reference_temperature: 25°C, reference_resistance: 10kOhm}
+    filters:
+      - sliding_window_moving_average: {window_size: 3, send_every: 1}
+      - lambda: 'return (x < 5 || x > 45) ? NAN : x;'
+
+  # 2 Кухня (плата 1, A1)
+  - {platform: ads1115, ads1115_id: ads1, multiplexer: A1_GND, gain: 4.096, id: v2, update_interval: 15s, internal: true}
+  - {platform: resistance, sensor: v2, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res2, internal: true}
+  - platform: ntc
+    sensor: res2
+    id: t2
+    name: "Пол 2 Кухня"
+    calibration: {b_constant: 3950, reference_temperature: 25°C, reference_resistance: 10kOhm}
+    filters:
+      - sliding_window_moving_average: {window_size: 3, send_every: 1}
+      - lambda: 'return (x < 5 || x > 45) ? NAN : x;'
+
+  # 3 Детская (плата 1, A2)
+  - {platform: ads1115, ads1115_id: ads1, multiplexer: A2_GND, gain: 4.096, id: v3, update_interval: 15s, internal: true}
+  - {platform: resistance, sensor: v3, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res3, internal: true}
+  - platform: ntc
+    sensor: res3
+    id: t3
+    name: "Пол 3 Детская"
+    calibration: {b_constant: 3950, reference_temperature: 25°C, reference_resistance: 10kOhm}
+    filters:
+      - sliding_window_moving_average: {window_size: 3, send_every: 1}
+      - lambda: 'return (x < 5 || x > 45) ? NAN : x;'
+
+  # 4 Спальня (плата 1, A3)
+  - {platform: ads1115, ads1115_id: ads1, multiplexer: A3_GND, gain: 4.096, id: v4, update_interval: 15s, internal: true}
+  - {platform: resistance, sensor: v4, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res4, internal: true}
+  - platform: ntc
+    sensor: res4
+    id: t4
+    name: "Пол 4 Спальня"
+    calibration: {b_constant: 3950, reference_temperature: 25°C, reference_resistance: 10kOhm}
+    filters:
+      - sliding_window_moving_average: {window_size: 3, send_every: 1}
+      - lambda: 'return (x < 5 || x > 45) ? NAN : x;'
+
+  # 5 Коридор (плата 2, A0)
+  - {platform: ads1115, ads1115_id: ads2, multiplexer: A0_GND, gain: 4.096, id: v5, update_interval: 15s, internal: true}
+  - {platform: resistance, sensor: v5, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res5, internal: true}
+  - platform: ntc
+    sensor: res5
+    id: t5
+    name: "Пол 5 Коридор"
+    calibration: {b_constant: 3950, reference_temperature: 25°C, reference_resistance: 10kOhm}
+    filters:
+      - sliding_window_moving_average: {window_size: 3, send_every: 1}
+      - lambda: 'return (x < 5 || x > 45) ? NAN : x;'
+
+  # 6 Ванная (плата 2, A1)
+  - {platform: ads1115, ads1115_id: ads2, multiplexer: A1_GND, gain: 4.096, id: v6, update_interval: 15s, internal: true}
+  - {platform: resistance, sensor: v6, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res6, internal: true}
+  - platform: ntc
+    sensor: res6
+    id: t6
+    name: "Пол 6 Ванная"
+    calibration: {b_constant: 3950, reference_temperature: 25°C, reference_resistance: 10kOhm}
+    filters:
+      - sliding_window_moving_average: {window_size: 3, send_every: 1}
+      - lambda: 'return (x < 5 || x > 45) ? NAN : x;'
+
+  # 7 Туалет (плата 2, A2)
+  - {platform: ads1115, ads1115_id: ads2, multiplexer: A2_GND, gain: 4.096, id: v7, update_interval: 15s, internal: true}
+  - {platform: resistance, sensor: v7, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res7, internal: true}
+  - platform: ntc
+    sensor: res7
+    id: t7
+    name: "Пол 7 Туалет"
+    calibration: {b_constant: 3950, reference_temperature: 25°C, reference_resistance: 10kOhm}
+    filters:
+      - sliding_window_moving_average: {window_size: 3, send_every: 1}
+      - lambda: 'return (x < 5 || x > 45) ? NAN : x;'
+
+  - platform: packet_transport
+    provider: ekran
+    remote_id: set1
+    id: set1
+    internal: true
+    on_value:
+      - lambda: |-
+          if (!isnan(x) && fabs(id(c1).target_temperature - x) > 0.05) {
+            auto call = id(c1).make_call();
+            call.set_target_temperature(x);
+            call.perform();
+          }
+  - platform: packet_transport
+    provider: ekran
+    remote_id: set2
+    id: set2
+    internal: true
+    on_value:
+      - lambda: |-
+          if (!isnan(x) && fabs(id(c2).target_temperature - x) > 0.05) {
+            auto call = id(c2).make_call();
+            call.set_target_temperature(x);
+            call.perform();
+          }
+  - platform: packet_transport
+    provider: ekran
+    remote_id: set3
+    id: set3
+    internal: true
+    on_value:
+      - lambda: |-
+          if (!isnan(x) && fabs(id(c3).target_temperature - x) > 0.05) {
+            auto call = id(c3).make_call();
+            call.set_target_temperature(x);
+            call.perform();
+          }
+  - platform: packet_transport
+    provider: ekran
+    remote_id: set4
+    id: set4
+    internal: true
+    on_value:
+      - lambda: |-
+          if (!isnan(x) && fabs(id(c4).target_temperature - x) > 0.05) {
+            auto call = id(c4).make_call();
+            call.set_target_temperature(x);
+            call.perform();
+          }
+  - platform: packet_transport
+    provider: ekran
+    remote_id: set5
+    id: set5
+    internal: true
+    on_value:
+      - lambda: |-
+          if (!isnan(x) && fabs(id(c5).target_temperature - x) > 0.05) {
+            auto call = id(c5).make_call();
+            call.set_target_temperature(x);
+            call.perform();
+          }
+  - platform: packet_transport
+    provider: ekran
+    remote_id: set6
+    id: set6
+    internal: true
+    on_value:
+      - lambda: |-
+          if (!isnan(x) && fabs(id(c6).target_temperature - x) > 0.05) {
+            auto call = id(c6).make_call();
+            call.set_target_temperature(x);
+            call.perform();
+          }
+  - platform: packet_transport
+    provider: ekran
+    remote_id: set7
+    id: set7
+    internal: true
+    on_value:
+      - lambda: |-
+          if (!isnan(x) && fabs(id(c7).target_temperature - x) > 0.05) {
+            auto call = id(c7).make_call();
+            call.set_target_temperature(x);
+            call.perform();
+          }
+
+# ---------- Статус датчиков (видно сразу на странице) ----------
+text_sensor:
+  - platform: template
+    id: sensors_status
+    name: "Состояние датчиков"
+    update_interval: never
+
+# ---------- Связь с настенным экраном (UDP в домашней сети) ----------
+udp:
+
+packet_transport:
+  - platform: udp
+    update_interval: 5s
+    sensors: [t1, t2, t3, t4, t5, t6, t7]
+    binary_sensors: [h1, h2, h3, h4, h5, h6, h7, h8]
+    providers:
+      - name: ekran
+
+binary_sensor:
+  - {platform: template, id: h1, internal: true, lambda: 'return id(r1).state;'}
+  - {platform: template, id: h2, internal: true, lambda: 'return id(r2).state;'}
+  - {platform: template, id: h3, internal: true, lambda: 'return id(r3).state;'}
+  - {platform: template, id: h4, internal: true, lambda: 'return id(r4).state;'}
+  - {platform: template, id: h5, internal: true, lambda: 'return id(r5).state;'}
+  - {platform: template, id: h6, internal: true, lambda: 'return id(r6).state;'}
+  - {platform: template, id: h7, internal: true, lambda: 'return id(r7).state;'}
+  - {platform: template, id: h8, internal: true, lambda: 'return id(r8).state;'}
+
+# ---------- Реле ----------
+switch:
+  - {platform: gpio, pin: GPIO16, name: "Реле 1 Балкон",   id: r1, restore_mode: ALWAYS_OFF}
+  - {platform: gpio, pin: GPIO14, name: "Реле 2 Кухня",   id: r2, restore_mode: ALWAYS_OFF}
+  - {platform: gpio, pin: GPIO12, name: "Реле 3 Детская", id: r3, restore_mode: ALWAYS_OFF}
+  - {platform: gpio, pin: GPIO13, name: "Реле 4 Спальня",  id: r4, restore_mode: ALWAYS_OFF}
+  - {platform: gpio, pin: GPIO15, name: "Реле 5 Коридор",  id: r5, restore_mode: ALWAYS_OFF}
+  - {platform: gpio, pin: GPIO0,  name: "Реле 6 Ванная",  id: r6, restore_mode: ALWAYS_OFF}
+  - {platform: gpio, pin: GPIO4,  name: "Реле 7 Туалет",   id: r7, restore_mode: ALWAYS_OFF}
+  - {platform: gpio, pin: GPIO5,  name: "Реле 8 Котёл",    id: r8, restore_mode: ALWAYS_OFF}
+
+# ---------- Термостаты зон ----------
+# Сервопривод открывается не чаще раза в 5 минут (бережём привод),
+# гистерезис ±0,5 °C. Если датчик оборван — зона просто не греет.
+climate:
+  - platform: thermostat
+    id: c1
+    name: "1 Балкон"
+    sensor: t1
+    min_heating_off_time: 300s
+    min_heating_run_time: 300s
+    min_idle_time: 30s
+    heat_deadband: 0.5
+    heat_overrun: 0.5
+    heat_action: {switch.turn_on: r1}
+    idle_action: {switch.turn_off: r1}
+    visual: {min_temperature: 15, max_temperature: 35, temperature_step: 0.5}
+    default_preset: Home
+    on_boot_restore_from: memory
+    preset: [{name: Home, default_target_temperature_low: 24, mode: HEAT}]
+
+  - platform: thermostat
+    id: c2
+    name: "2 Кухня"
+    sensor: t2
+    min_heating_off_time: 300s
+    min_heating_run_time: 300s
+    min_idle_time: 30s
+    heat_deadband: 0.5
+    heat_overrun: 0.5
+    heat_action: {switch.turn_on: r2}
+    idle_action: {switch.turn_off: r2}
+    visual: {min_temperature: 15, max_temperature: 35, temperature_step: 0.5}
+    default_preset: Home
+    on_boot_restore_from: memory
+    preset: [{name: Home, default_target_temperature_low: 26, mode: HEAT}]
+
+  - platform: thermostat
+    id: c3
+    name: "3 Детская"
+    sensor: t3
+    min_heating_off_time: 300s
+    min_heating_run_time: 300s
+    min_idle_time: 30s
+    heat_deadband: 0.5
+    heat_overrun: 0.5
+    heat_action: {switch.turn_on: r3}
+    idle_action: {switch.turn_off: r3}
+    visual: {min_temperature: 15, max_temperature: 35, temperature_step: 0.5}
+    default_preset: Home
+    on_boot_restore_from: memory
+    preset: [{name: Home, default_target_temperature_low: 26, mode: HEAT}]
+
+  - platform: thermostat
+    id: c4
+    name: "4 Спальня"
+    sensor: t4
+    min_heating_off_time: 300s
+    min_heating_run_time: 300s
+    min_idle_time: 30s
+    heat_deadband: 0.5
+    heat_overrun: 0.5
+    heat_action: {switch.turn_on: r4}
+    idle_action: {switch.turn_off: r4}
+    visual: {min_temperature: 15, max_temperature: 35, temperature_step: 0.5}
+    default_preset: Home
+    on_boot_restore_from: memory
+    preset: [{name: Home, default_target_temperature_low: 25, mode: HEAT}]
+
+  - platform: thermostat
+    id: c5
+    name: "5 Коридор"
+    sensor: t5
+    min_heating_off_time: 300s
+    min_heating_run_time: 300s
+    min_idle_time: 30s
+    heat_deadband: 0.5
+    heat_overrun: 0.5
+    heat_action: {switch.turn_on: r5}
+    idle_action: {switch.turn_off: r5}
+    visual: {min_temperature: 15, max_temperature: 35, temperature_step: 0.5}
+    default_preset: Home
+    on_boot_restore_from: memory
+    preset: [{name: Home, default_target_temperature_low: 25, mode: HEAT}]
+
+  - platform: thermostat
+    id: c6
+    name: "6 Ванная"
+    sensor: t6
+    min_heating_off_time: 300s
+    min_heating_run_time: 300s
+    min_idle_time: 30s
+    heat_deadband: 0.5
+    heat_overrun: 0.5
+    heat_action: {switch.turn_on: r6}
+    idle_action: {switch.turn_off: r6}
+    visual: {min_temperature: 15, max_temperature: 35, temperature_step: 0.5}
+    default_preset: Home
+    on_boot_restore_from: memory
+    preset: [{name: Home, default_target_temperature_low: 28, mode: HEAT}]
+
+  - platform: thermostat
+    id: c7
+    name: "7 Туалет"
+    sensor: t7
+    min_heating_off_time: 300s
+    min_heating_run_time: 300s
+    min_idle_time: 30s
+    heat_deadband: 0.5
+    heat_overrun: 0.5
+    heat_action: {switch.turn_on: r7}
+    idle_action: {switch.turn_off: r7}
+    visual: {min_temperature: 15, max_temperature: 35, temperature_step: 0.5}
+    default_preset: Home
+    on_boot_restore_from: memory
+    preset: [{name: Home, default_target_temperature_low: 26, mode: HEAT}]
+
+# ---------- Котёл ----------
+# Включается через 3 минуты после того, как открылась хоть одна зона
+# (сервоприводам нужно время открыться), выключается сразу,
+# когда все зоны закрыты.
+globals:
+  - id: heat_since
+    type: uint32_t
+    initial_value: '0'
+
+interval:
+  - interval: 5s
+    then:
+      - lambda: |-
+          // Защита: датчик оборван (NA) -> зона закрыта
+          if (isnan(id(t1).state) && id(r1).state) id(r1).turn_off();
+          if (isnan(id(t2).state) && id(r2).state) id(r2).turn_off();
+          if (isnan(id(t3).state) && id(r3).state) id(r3).turn_off();
+          if (isnan(id(t4).state) && id(r4).state) id(r4).turn_off();
+          if (isnan(id(t5).state) && id(r5).state) id(r5).turn_off();
+          if (isnan(id(t6).state) && id(r6).state) id(r6).turn_off();
+          if (isnan(id(t7).state) && id(r7).state) id(r7).turn_off();
+          std::string bad = "";
+          if (isnan(id(t1).state)) bad += "Балкон ";
+          if (isnan(id(t2).state)) bad += "Кухня ";
+          if (isnan(id(t3).state)) bad += "Детская ";
+          if (isnan(id(t4).state)) bad += "Спальня ";
+          if (isnan(id(t5).state)) bad += "Коридор ";
+          if (isnan(id(t6).state)) bad += "Ванная ";
+          if (isnan(id(t7).state)) bad += "Туалет ";
+          std::string st = bad.empty() ? "OK" : ("ОБРЫВ: " + bad);
+          if (id(sensors_status).state != st) id(sensors_status).publish_state(st);
+          bool any = id(r1).state || id(r2).state || id(r3).state || id(r4).state
+                  || id(r5).state || id(r6).state || id(r7).state;
+          uint32_t now = millis();
+          if (any) {
+            if (id(heat_since) == 0) id(heat_since) = now == 0 ? 1 : now;
+            if (now - id(heat_since) > 180000 && !id(r8).state) id(r8).turn_on();
+          } else {
+            id(heat_since) = 0;
+            if (id(r8).state) id(r8).turn_off();
+          }
+
+button:
+  - platform: restart
+    name: "Перезагрузка"
