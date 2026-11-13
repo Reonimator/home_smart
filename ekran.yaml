@@ -50,10 +50,10 @@ font:
   - {file: "gfonts://Roboto@700", id: f_huge, size: 72, glyphsets: [GF_Latin_Core, GF_Cyrillic_Core]}
 
 output:
-  - {platform: ledc, pin: GPIO2, id: backlight_pwm}
+  - {platform: gpio, pin: GPIO2, id: backlight_pin}
 
 light:
-  - {platform: monochromatic, output: backlight_pwm, name: "Подсветка", id: backlight, restore_mode: ALWAYS_ON}
+  - {platform: binary, output: backlight_pin, name: "Подсветка", id: backlight, restore_mode: ALWAYS_ON}
 
 i2c:
   sda: GPIO19
