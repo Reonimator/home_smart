@@ -16,11 +16,6 @@ esp32:
   flash_size: 16MB
   framework:
     type: esp-idf
-    sdkconfig_options:
-      CONFIG_ESP32S3_DATA_CACHE_64KB: y
-      CONFIG_ESP32S3_DATA_CACHE_LINE_64B: y
-      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: y
-      CONFIG_SPIRAM_RODATA: y
 
 psram:
   mode: octal
@@ -54,7 +49,7 @@ font:
   - {file: "gfonts://Roboto@700", id: f_huge, size: 72, glyphsets: [GF_Latin_Core, GF_Cyrillic_Core]}
 
 output:
-  - {platform: ledc, pin: GPIO2, id: backlight_pwm, frequency: 20000Hz}
+  - {platform: ledc, pin: GPIO2, id: backlight_pwm}
 
 light:
   - {platform: monochromatic, output: backlight_pwm, name: "Подсветка", id: backlight, restore_mode: ALWAYS_ON}
