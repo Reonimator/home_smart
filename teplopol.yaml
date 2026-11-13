@@ -15,11 +15,11 @@ logger:
   level: INFO
 
 wifi:
-  ssid: "A-M"
+  ssid: !secret wifi_ssid
   password: !secret wifi_password
   ap:
     ssid: "Teplopol-Setup"
-    password: "12345678"
+    password: !secret ap_password
 
 captive_portal:
 

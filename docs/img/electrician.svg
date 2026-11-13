@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 800" width="1100" height="800" font-family="Arial, sans-serif">
+<rect width="1100" height="800" fill="#ffffff"/>
+<text x="20" y="34" font-size="22" font-weight="bold" fill="#111">Схема для электрика: силовая часть тёплого пола</text>
+<text x="20" y="58" font-size="14" fill="#555">Красный — фаза L 220 В, синий — ноль N, зелёный — 12 В, фиолетовый — сухой контакт котла (без напряжения)</text>
+<rect x="20" y="90" width="170" height="110" rx="8" fill="#f3f6f8" stroke="#37474f" stroke-width="2"/>
+<text x="105.0" y="112" font-size="15" font-weight="bold" text-anchor="middle" fill="#111">Щиток</text>
+<text x="105.0" y="132" font-size="12" text-anchor="middle" fill="#444">автомат 6 А</text>
+<text x="105.0" y="149" font-size="12" text-anchor="middle" fill="#444">(отдельная линия</text>
+<text x="105.0" y="166" font-size="12" text-anchor="middle" fill="#444">или от розеточной)</text>
+<text x="196" y="118" font-size="14" text-anchor="start" fill="#d32f2f" font-weight="bold">L</text>
+<text x="196" y="168" font-size="14" text-anchor="start" fill="#1565c0" font-weight="bold">N</text>
+<polyline points="190,124 230,124 230,656" fill="none" stroke="#d32f2f" stroke-width="3"/>
+<polyline points="190,174 255,174 255,750" fill="none" stroke="#1565c0" stroke-width="3"/>
+<rect x="300" y="90" width="200" height="110" rx="8" fill="#f3f6f8" stroke="#37474f" stroke-width="2"/>
+<text x="400.0" y="112" font-size="15" font-weight="bold" text-anchor="middle" fill="#111">Mean Well HDR-15-12</text>
+<text x="400.0" y="132" font-size="12" text-anchor="middle" fill="#444">блок питания на DIN-рейку</text>
+<text x="400.0" y="149" font-size="12" text-anchor="middle" fill="#444">220 В → 12 В</text>
+<polyline points="230,140 300,140" fill="none" stroke="#d32f2f" stroke-width="3"/>
+<circle cx="230" cy="140" r="4" fill="#d32f2f"/>
+<text x="290" y="136" font-size="12" text-anchor="end" fill="#d32f2f">L</text>
+<polyline points="255,165 300,165" fill="none" stroke="#1565c0" stroke-width="3"/>
+<circle cx="255" cy="165" r="4" fill="#1565c0"/>
+<text x="290" y="161" font-size="12" text-anchor="end" fill="#1565c0">N</text>
+<rect x="300" y="250" width="240" height="470" rx="8" fill="#eef5ee" stroke="#37474f" stroke-width="2"/>
+<text x="420.0" y="272" font-size="15" font-weight="bold" text-anchor="middle" fill="#111">Плата ESP12F_Relay_X8</text>
+<text x="420.0" y="292" font-size="12" text-anchor="middle" fill="#444">питание 7–28 В</text>
+<polyline points="500,130 560,130 560,232 420,232 420,250" fill="none" stroke="#2e7d32" stroke-width="3"/>
+<text x="565" y="135" font-size="12" text-anchor="start" fill="#2e7d32">+V 12 В</text>
+<polyline points="500,170 545,170 545,224 380,224 380,250" fill="none" stroke="#333" stroke-width="3"/>
+<text x="548" y="196" font-size="12" text-anchor="start" fill="#333">−V</text>
+<text x="380" y="246" font-size="11" text-anchor="middle" fill="#333">GND</text>
+<text x="420" y="246" font-size="11" text-anchor="middle" fill="#2e7d32">VIN</text>
+<rect x="430" y="294" width="100" height="34" rx="5" fill="#fff" stroke="#607d8b"/>
+<text x="480" y="308" font-size="12" text-anchor="middle" fill="#111" font-weight="bold">Реле 1</text>
+<text x="480" y="322" font-size="10" text-anchor="middle" fill="#666">COM   NO</text>
+<polyline points="230,304 430,304" fill="none" stroke="#d32f2f" stroke-width="2"/>
+<circle cx="230" cy="304" r="4" fill="#d32f2f"/>
+<polyline points="530,316 700,316" fill="none" stroke="#d32f2f" stroke-width="2"/>
+<rect x="700" y="292" width="200" height="38" rx="8" fill="#fff7f7" stroke="#b0bec5" stroke-width="2"/>
+<text x="800.0" y="314" font-size="15" font-weight="bold" text-anchor="middle" fill="#111">Привод 1: Балкон</text>
+<polyline points="900,316 950,316" fill="none" stroke="#1565c0" stroke-width="2"/>
+<rect x="430" y="344" width="100" height="34" rx="5" fill="#fff" stroke="#607d8b"/>
+<text x="480" y="358" font-size="12" text-anchor="middle" fill="#111" font-weight="bold">Реле 2</text>
+<text x="480" y="372" font-size="10" text-anchor="middle" fill="#666">COM   NO</text>
+<polyline points="230,354 430,354" fill="none" stroke="#d32f2f" stroke-width="2"/>
+<circle cx="230" cy="354" r="4" fill="#d32f2f"/>
+<polyline points="530,366 700,366" fill="none" stroke="#d32f2f" stroke-width="2"/>
+<rect x="700" y="342" width="200" height="38" rx="8" fill="#fff7f7" stroke="#b0bec5" stroke-width="2"/>
+<text x="800.0" y="364" font-size="15" font-weight="bold" text-anchor="middle" fill="#111">Привод 2: Кухня</text>
+<polyline points="900,366 950,366" fill="none" stroke="#1565c0" stroke-width="2"/>
+<rect x="430" y="394" width="100" height="34" rx="5" fill="#fff" stroke="#607d8b"/>
+<text x="480" y="408" font-size="12" text-anchor="middle" fill="#111" font-weight="bold">Реле 3</text>
+<text x="480" y="422" font-size="10" text-anchor="middle" fill="#666">COM   NO</text>
+<polyline points="230,404 430,404" fill="none" stroke="#d32f2f" stroke-width="2"/>
+<circle cx="230" cy="404" r="4" fill="#d32f2f"/>
+<polyline points="530,416 700,416" fill="none" stroke="#d32f2f" stroke-width="2"/>
+<rect x="700" y="392" width="200" height="38" rx="8" fill="#fff7f7" stroke="#b0bec5" stroke-width="2"/>
+<text x="800.0" y="414" font-size="15" font-weight="bold" text-anchor="middle" fill="#111">Привод 3: Детская</text>
+<polyline points="900,416 950,416" fill="none" stroke="#1565c0" stroke-width="2"/>
+<rect x="430" y="444" width="100" height="34" rx="5" fill="#fff" stroke="#607d8b"/>
+<text x="480" y="458" font-size="12" text-anchor="middle" fill="#111" font-weight="bold">Реле 4</text>
+<text x="480" y="472" font-size="10" text-anchor="middle" fill="#666">COM   NO</text>
+<polyline points="230,454 430,454" fill="none" stroke="#d32f2f" stroke-width="2"/>
+<circle cx="230" cy="454" r="4" fill="#d32f2f"/>
+<polyline points="530,466 700,466" fill="none" stroke="#d32f2f" stroke-width="2"/>
+<rect x="700" y="442" width="200" height="38" rx="8" fill="#fff7f7" stroke="#b0bec5" stroke-width="2"/>
+<text x="800.0" y="464" font-size="15" font-weight="bold" text-anchor="middle" fill="#111">Привод 4: Спальня</text>
+<polyline points="900,466 950,466" fill="none" stroke="#1565c0" stroke-width="2"/>
+<rect x="430" y="494" width="100" height="34" rx="5" fill="#fff" stroke="#607d8b"/>
+<text x="480" y="508" font-size="12" text-anchor="middle" fill="#111" font-weight="bold">Реле 5</text>
+<text x="480" y="522" font-size="10" text-anchor="middle" fill="#666">COM   NO</text>
+<polyline points="230,504 430,504" fill="none" stroke="#d32f2f" stroke-width="2"/>
+<circle cx="230" cy="504" r="4" fill="#d32f2f"/>
+<polyline points="530,516 700,516" fill="none" stroke="#d32f2f" stroke-width="2"/>
+<rect x="700" y="492" width="200" height="38" rx="8" fill="#fff7f7" stroke="#b0bec5" stroke-width="2"/>
+<text x="800.0" y="514" font-size="15" font-weight="bold" text-anchor="middle" fill="#111">Привод 5: Коридор</text>
+<polyline points="900,516 950,516" fill="none" stroke="#1565c0" stroke-width="2"/>
+<rect x="430" y="544" width="100" height="34" rx="5" fill="#fff" stroke="#607d8b"/>
+<text x="480" y="558" font-size="12" text-anchor="middle" fill="#111" font-weight="bold">Реле 6</text>
+<text x="480" y="572" font-size="10" text-anchor="middle" fill="#666">COM   NO</text>
+<polyline points="230,554 430,554" fill="none" stroke="#d32f2f" stroke-width="2"/>
+<circle cx="230" cy="554" r="4" fill="#d32f2f"/>
+<polyline points="530,566 700,566" fill="none" stroke="#d32f2f" stroke-width="2"/>
+<rect x="700" y="542" width="200" height="38" rx="8" fill="#fff7f7" stroke="#b0bec5" stroke-width="2"/>
+<text x="800.0" y="564" font-size="15" font-weight="bold" text-anchor="middle" fill="#111">Привод 6: Ванная</text>
+<polyline points="900,566 950,566" fill="none" stroke="#1565c0" stroke-width="2"/>
+<rect x="430" y="594" width="100" height="34" rx="5" fill="#fff" stroke="#607d8b"/>
+<text x="480" y="608" font-size="12" text-anchor="middle" fill="#111" font-weight="bold">Реле 7</text>
+<text x="480" y="622" font-size="10" text-anchor="middle" fill="#666">COM   NO</text>
+<polyline points="230,604 430,604" fill="none" stroke="#d32f2f" stroke-width="2"/>
+<circle cx="230" cy="604" r="4" fill="#d32f2f"/>
+<polyline points="530,616 700,616" fill="none" stroke="#d32f2f" stroke-width="2"/>
+<rect x="700" y="592" width="200" height="38" rx="8" fill="#fff7f7" stroke="#b0bec5" stroke-width="2"/>
+<text x="800.0" y="614" font-size="15" font-weight="bold" text-anchor="middle" fill="#111">Привод 7: Туалет</text>
+<polyline points="900,616 950,616" fill="none" stroke="#1565c0" stroke-width="2"/>
+<rect x="430" y="644" width="100" height="34" rx="5" fill="#fff" stroke="#607d8b"/>
+<text x="480" y="658" font-size="12" text-anchor="middle" fill="#111" font-weight="bold">Реле 8</text>
+<text x="480" y="672" font-size="10" text-anchor="middle" fill="#666">COM   NO</text>
+<polyline points="530,654 700,654" fill="none" stroke="#7b1fa2" stroke-width="3"/>
+<polyline points="530,668 700,668" fill="none" stroke="#7b1fa2" stroke-width="3"/>
+<polyline points="950,316 950,750 255,750" fill="none" stroke="#1565c0" stroke-width="2"/>
+<circle cx="950" cy="316" r="4" fill="#1565c0"/>
+<circle cx="950" cy="366" r="4" fill="#1565c0"/>
+<circle cx="950" cy="416" r="4" fill="#1565c0"/>
+<circle cx="950" cy="466" r="4" fill="#1565c0"/>
+<circle cx="950" cy="516" r="4" fill="#1565c0"/>
+<circle cx="950" cy="566" r="4" fill="#1565c0"/>
+<circle cx="950" cy="616" r="4" fill="#1565c0"/>
+<text x="958" y="330" font-size="13" text-anchor="start" fill="#1565c0" font-weight="bold">N</text>
+<text x="958" y="346" font-size="11" text-anchor="start" fill="#1565c0">(второй провод</text>
+<text x="958" y="360" font-size="11" text-anchor="start" fill="#1565c0">каждого привода)</text>
+<text x="800" y="280" font-size="13" text-anchor="middle" fill="#111" font-weight="bold">Сервоприводы Valtec NC 220 В</text>
+<rect x="700" y="642" width="235" height="88" rx="8" fill="#f6effa" stroke="#7b1fa2" stroke-width="2"/>
+<text x="817.5" y="664" font-size="15" font-weight="bold" text-anchor="middle" fill="#111">Котёл Protherm (MEK21_3)</text>
+<text x="817.5" y="684" font-size="12" text-anchor="middle" fill="#444">колодка RT24V: СНЯТЬ перемычку,</text>
+<text x="817.5" y="701" font-size="12" text-anchor="middle" fill="#444">подключить COM и NO реле 8</text>
+<text x="20" y="778" font-size="14" text-anchor="start" fill="#7b1fa2" font-weight="bold">⚠ На RT24V НЕЛЬЗЯ подавать 220 В — это сухой контакт.</text>
+<text x="20" y="796" font-size="13" text-anchor="start" fill="#7b1fa2">Вернуть перемычку на RT24V = котёл работает как раньше, без платы.</text>
+<rect x="820" y="90" width="260" height="110" rx="8" fill="#fffde7" stroke="#9e9d24" stroke-width="2"/>
+<text x="950.0" y="112" font-size="15" font-weight="bold" text-anchor="middle" fill="#111">Датчики пола (слаботочка)</text>
+<text x="950.0" y="132" font-size="12" text-anchor="middle" fill="#444">7 × NTC 10 кОм → ADS1115</text>
+<text x="950.0" y="149" font-size="12" text-anchor="middle" fill="#444">провода отдельно от 220 В,</text>
+<text x="950.0" y="166" font-size="12" text-anchor="middle" fill="#444">не в одной гофре с силовыми</text>
+</svg>

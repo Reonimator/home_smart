@@ -32,11 +32,11 @@ psram:
 logger:
 
 wifi:
-  ssid: "A-M"
+  ssid: !secret wifi_ssid
   password: !secret wifi_password
   ap:
     ssid: "Ekran-Setup"
-    password: "12345678"
+    password: !secret ap_password
 
 captive_portal:
 
