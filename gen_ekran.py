@@ -46,7 +46,7 @@ ota:
 time:
   - platform: sntp
     id: sntp_time
-    timezone: Europe/Moscow
+    timezone: MSK-3
     on_time_sync:
       - script.execute: clock
 
