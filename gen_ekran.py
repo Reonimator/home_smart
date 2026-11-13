@@ -47,6 +47,8 @@ time:
   - platform: sntp
     id: sntp_time
     timezone: Europe/Moscow
+    on_time_sync:
+      - script.execute: clock
 
 font:
   - {file: "gfonts://Roboto", id: f_small, size: 20, glyphsets: [GF_Latin_Core, GF_Cyrillic_Core]}
@@ -172,6 +174,19 @@ script:
           snprintf(b, sizeof(b), "%.1f°", id(night_t)); ST(id(s_nt), b);
           snprintf(b, sizeof(b), "%.1f°", id(away_t)); ST(id(s_at), b);
           snprintf(b, sizeof(b), "%d мин", id(sleep_min)); ST(id(s_sl), b);
+  - id: clock
+    then:
+      - lambda: |-
+          static const char *DN[7] = {"Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"};
+          static const char *MN[12] = {"января", "февраля", "марта", "апреля", "мая", "июня",
+                                       "июля", "августа", "сентября", "октября", "ноября", "декабря"};
+          auto t = id(sntp_time).now();
+          char b[64];
+          if (!t.is_valid()) snprintf(b, sizeof(b), "--:--");
+          else snprintf(b, sizeof(b), "%s, %d %s   %02d:%02d", DN[t.day_of_week - 1], t.day_of_month,
+                        MN[t.month - 1], t.hour, t.minute);
+          const char *c = lv_label_get_text(id(lclock));
+          if (c == nullptr || strcmp(c, b) != 0) lv_label_set_text(id(lclock), b);
   - id: room_open
     then:
       - lambda: |-
@@ -202,12 +217,7 @@ interval:
   - interval: 20s
     then:
       - script.execute: compute
-      - lvgl.label.update:
-          id: lclock
-          text: !lambda |-
-            auto t = id(sntp_time).now();
-            if (!t.is_valid()) return std::string("--:--");
-            return t.strftime("%H:%M");
+      - script.execute: clock
 
 sensor:''')
 for i in range(1,8):
