@@ -130,6 +130,12 @@ script:
           id(night_active) = night;
           for (int i = 0; i < 7; i++)
             id(eff)[i] = (id(mode) == 1) ? id(away_t) : (night ? id(night_t) : id(tg)[i]);
+          // сразу отправляем на плату, не дожидаясь опроса
+          id(set1).publish_state(id(eff)[0]); id(set2).publish_state(id(eff)[1]);
+          id(set3).publish_state(id(eff)[2]); id(set4).publish_state(id(eff)[3]);
+          id(set5).publish_state(id(eff)[4]); id(set6).publish_state(id(eff)[5]);
+          id(set7).publish_state(id(eff)[6]);
+          id(water_cmd).publish_state((float) id(wcmd));
       - script.execute: refresh
   - id: refresh
     then:
@@ -204,7 +210,7 @@ udp:
 
 packet_transport:
   - platform: udp
-    update_interval: 5s
+    update_interval: 1s
     sensors: [set1, set2, set3, set4, set5, set6, set7, water_cmd]
     providers:
       - name: teplopol
@@ -217,8 +223,8 @@ interval:
 
 sensor:''')
 for i in range(1,8):
-    A(f"  - {{platform: template, id: set{i}, internal: true, update_interval: 5s, lambda: 'return id(eff)[{i-1}];'}}")
-A("  - {platform: template, id: water_cmd, internal: true, update_interval: 5s, lambda: 'return (float) id(wcmd);'}")
+    A(f"  - {{platform: template, id: set{i}, internal: true, update_interval: 60s, lambda: 'return id(eff)[{i-1}];'}}")
+A("  - {platform: template, id: water_cmd, internal: true, update_interval: 60s, lambda: 'return (float) id(wcmd);'}")
 for i in range(1,8):
     A(f'''  - platform: packet_transport
     provider: teplopol
@@ -347,7 +353,7 @@ for i in range(1,9):
                     - label: {{align: CENTER, text_font: f_small, text: "Закр."}}
                   on_click:
                     - lambda: 'id(wcmd) = 1;'
-                    - script.execute: refresh
+                    - script.execute: compute
               - button:
                   align: BOTTOM_RIGHT
                   width: 84
@@ -357,7 +363,7 @@ for i in range(1,9):
                     - label: {{align: CENTER, text_font: f_small, text: "Откр."}}
                   on_click:
                     - lambda: 'id(wcmd) = 0;'
-                    - script.execute: refresh''')
+                    - script.execute: compute''')
 # room page
 A('''
     - id: room_page
@@ -398,6 +404,8 @@ A('''
                   id(tg)[id(cur)] = x / 2.0f;
                   char b[16]; snprintf(b, sizeof(b), "%.1f°", id(tg)[id(cur)]);
                   lv_label_set_text(id(r_tgt), b);
+            on_release:
+              - script.execute: compute
         - label: {id: r_tgt, x: 140, y: 190, width: 180, text_align: CENTER, text_font: f_huge, text_color: 0xFFFFFF, text: ""}
         - label: {id: r_floor, x: 450, y: 110, text_font: f_mid, text_color: 0xCFD8DC, text: ""}
         - label: {id: r_note, x: 450, y: 150, width: 330, text_font: f_small, text_color: 0x85B7EB, text: ""}''')
@@ -412,7 +420,8 @@ for sign,xx,expr in [("-",450,"std::max(15.0f, id(tg)[id(cur)] - 0.5f)"),("+",63
               - label: {{align: CENTER, text_font: f_huge, text: "{sign}"}}
             on_click:
               - lambda: 'id(tg)[id(cur)] = {expr};'
-              - script.execute: room_open''')
+              - script.execute: room_open
+              - script.execute: compute''')
 # settings
 A('''
     - id: set_page

@@ -226,7 +226,7 @@ udp:
 
 packet_transport:
   - platform: udp
-    update_interval: 5s
+    update_interval: 1s
     sensors: [t1, t2, t3, t4, t5, t6, t7]
     binary_sensors: [h1, h2, h3, h4, h5, h6, h7, h8]
     providers:
