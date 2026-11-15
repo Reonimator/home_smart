@@ -9,7 +9,6 @@ set "TEMP=C:\esphome\tmp"
 set "TMP=C:\esphome\tmp"
 set "PLATFORMIO_CORE_DIR=C:\esphome\pio"
 set "ESPHOME_ESP_IDF_PREFIX=C:\esphome\idf"
-set "PYTHONUTF8=1"
 cd /d "%~dp0.."
 if not exist secrets.yaml (
   echo.
