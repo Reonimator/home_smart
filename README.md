@@ -43,6 +43,7 @@
 |---|---|
 | `teplopol.yaml` | Прошивка платы реле (ESP12F_Relay_X8, ESP8266) |
 | `ekran.yaml` | Прошивка экрана (Sunton ESP32-8048S070C) |
+| `neptun.yaml` | Нептун через RS-485 (ESP32-C3), тестовая |
 | `gen_ekran.py` | Генератор `ekran.yaml`: правки вносятся в него, потом `python gen_ekran.py` |
 | `esp.bat` | Забирает свежие файлы с GitHub и прошивает: `esp.bat ekran.yaml` |
 | `secrets.example.yaml` | Образец файла с паролями. Сам `secrets.yaml` в GitHub не попадает |
