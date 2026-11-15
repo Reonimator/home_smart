@@ -34,6 +34,7 @@
 | [docs/wiring.md](docs/wiring.md) | Распиновка, датчики, ADS1115, экран |
 | [docs/electrician.md](docs/electrician.md) | **Схема для электрика**: 220 В, сервоприводы, котёл, питание |
 | [docs/neptun.md](docs/neptun.md) | План подключения Нептуна |
+| [docs/away-power.md](docs/away-power.md) | Отключение розеток и варочной панели в режиме «Ушёл» |
 | [docs/flashing.md](docs/flashing.md) | Как прошивать с Windows (в том числе с русским именем пользователя) |
 | [docs/history.md](docs/history.md) | Журнал: как делали, какие были ошибки и как их исправили |
 
