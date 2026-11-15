@@ -25,6 +25,12 @@ C:\esphome\home_smart\esp.bat teplopol.yaml   # плата реле
 
 ESPHome спросит, куда прошивать: в COM-порт (кабель) или по Wi-Fi (OTA).
 
+Если Windows не находит `ekran.local` (ошибка `Error resolving IP address`), укажите IP вручную:
+```
+esp.bat ekran.yaml 192.168.1.121
+```
+IP устройства видно в роутере или в журнале при прошивке кабелем (`IP Address:`). Чтобы IP не менялся, закрепите его в роутере (резервирование DHCP).
+
 ### Плата реле кабелем (если OTA не работает)
 1. Отсоединить провод SCL от вывода RXD.
 2. CP2102: TX→RX, RX→TX, GND→GND. GPIO0 замкнуть на GND и подать питание.

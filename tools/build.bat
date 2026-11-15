@@ -23,5 +23,8 @@ if /i "%~2"=="clean" (
 )
 rem kesh CMake s russkimi bukvami lomaet povtornuyu sborku
 if exist ".esphome\build\%~n1\build\CMakeCache.txt" del /q ".esphome\build\%~n1\build\CMakeCache.txt"
-"%PYEXE%" -m esphome run %1
+set "DEV="
+if not "%~2"=="" if /i not "%~2"=="clean" set "DEV=--device %~2"
+if not "%~3"=="" set "DEV=--device %~3"
+"%PYEXE%" -m esphome run %1 %DEV%
 endlocal
