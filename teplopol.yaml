@@ -52,7 +52,10 @@ sensor:
     sensor: res1
     id: t1
     name: "Пол 1 Балкон"
-    calibration: {b_constant: 3950, reference_temperature: 25°C, reference_resistance: 10kOhm}
+    calibration:   # таблица из паспорта Valtec VT.AC602 (B≈3330, не 3950)
+      - 22.07kOhm -> 5°C
+      - 12.091kOhm -> 20°C
+      - 5.827kOhm -> 40°C
     filters:
       - sliding_window_moving_average: {window_size: 3, send_every: 1}
       - lambda: 'return (x < 5 || x > 45) ? NAN : x;'
@@ -64,7 +67,10 @@ sensor:
     sensor: res2
     id: t2
     name: "Пол 2 Кухня"
-    calibration: {b_constant: 3950, reference_temperature: 25°C, reference_resistance: 10kOhm}
+    calibration:   # таблица из паспорта Valtec VT.AC602 (B≈3330, не 3950)
+      - 22.07kOhm -> 5°C
+      - 12.091kOhm -> 20°C
+      - 5.827kOhm -> 40°C
     filters:
       - sliding_window_moving_average: {window_size: 3, send_every: 1}
       - lambda: 'return (x < 5 || x > 45) ? NAN : x;'
@@ -76,7 +82,10 @@ sensor:
     sensor: res3
     id: t3
     name: "Пол 3 Детская"
-    calibration: {b_constant: 3950, reference_temperature: 25°C, reference_resistance: 10kOhm}
+    calibration:   # таблица из паспорта Valtec VT.AC602 (B≈3330, не 3950)
+      - 22.07kOhm -> 5°C
+      - 12.091kOhm -> 20°C
+      - 5.827kOhm -> 40°C
     filters:
       - sliding_window_moving_average: {window_size: 3, send_every: 1}
       - lambda: 'return (x < 5 || x > 45) ? NAN : x;'
@@ -88,7 +97,10 @@ sensor:
     sensor: res4
     id: t4
     name: "Пол 4 Спальня"
-    calibration: {b_constant: 3950, reference_temperature: 25°C, reference_resistance: 10kOhm}
+    calibration:   # таблица из паспорта Valtec VT.AC602 (B≈3330, не 3950)
+      - 22.07kOhm -> 5°C
+      - 12.091kOhm -> 20°C
+      - 5.827kOhm -> 40°C
     filters:
       - sliding_window_moving_average: {window_size: 3, send_every: 1}
       - lambda: 'return (x < 5 || x > 45) ? NAN : x;'
@@ -100,7 +112,10 @@ sensor:
     sensor: res5
     id: t5
     name: "Пол 5 Коридор"
-    calibration: {b_constant: 3950, reference_temperature: 25°C, reference_resistance: 10kOhm}
+    calibration:   # таблица из паспорта Valtec VT.AC602 (B≈3330, не 3950)
+      - 22.07kOhm -> 5°C
+      - 12.091kOhm -> 20°C
+      - 5.827kOhm -> 40°C
     filters:
       - sliding_window_moving_average: {window_size: 3, send_every: 1}
       - lambda: 'return (x < 5 || x > 45) ? NAN : x;'
@@ -112,7 +127,10 @@ sensor:
     sensor: res6
     id: t6
     name: "Пол 6 Ванная"
-    calibration: {b_constant: 3950, reference_temperature: 25°C, reference_resistance: 10kOhm}
+    calibration:   # таблица из паспорта Valtec VT.AC602 (B≈3330, не 3950)
+      - 22.07kOhm -> 5°C
+      - 12.091kOhm -> 20°C
+      - 5.827kOhm -> 40°C
     filters:
       - sliding_window_moving_average: {window_size: 3, send_every: 1}
       - lambda: 'return (x < 5 || x > 45) ? NAN : x;'
@@ -124,7 +142,10 @@ sensor:
     sensor: res7
     id: t7
     name: "Пол 7 Туалет"
-    calibration: {b_constant: 3950, reference_temperature: 25°C, reference_resistance: 10kOhm}
+    calibration:   # таблица из паспорта Valtec VT.AC602 (B≈3330, не 3950)
+      - 22.07kOhm -> 5°C
+      - 12.091kOhm -> 20°C
+      - 5.827kOhm -> 40°C
     filters:
       - sliding_window_moving_average: {window_size: 3, send_every: 1}
       - lambda: 'return (x < 5 || x > 45) ? NAN : x;'
