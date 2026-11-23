@@ -137,6 +137,17 @@ script:
   - id: refresh
     then:
       - lambda: |-
+          // «Греет» и «Котёл» берём прямо из последнего пакета платы при каждой перерисовке.
+          // Раньше они менялись только по событию смены состояния, и если событие
+          // терялось, плитка оставалась серой, а котёл «ждал», хотя реле были включены.
+          id(hs)[0] = id(rh1).has_state() && id(rh1).state;
+          id(hs)[1] = id(rh2).has_state() && id(rh2).state;
+          id(hs)[2] = id(rh3).has_state() && id(rh3).state;
+          id(hs)[3] = id(rh4).has_state() && id(rh4).state;
+          id(hs)[4] = id(rh5).has_state() && id(rh5).state;
+          id(hs)[5] = id(rh6).has_state() && id(rh6).state;
+          id(hs)[6] = id(rh7).has_state() && id(rh7).state;
+          id(boiler) = id(rh8).has_state() && id(rh8).state;
           char b[48];
           auto ST = [](lv_obj_t *o, const char *s) {
             const char *c = lv_label_get_text(o);
@@ -217,6 +228,11 @@ interval:
     then:
       - script.execute: compute
       - script.execute: upd_clock
+  # Страховка: раз в 2 с сверяем экран с последними данными платы
+  # (перерисовывается только то, что изменилось, мерцания не будет)
+  - interval: 2s
+    then:
+      - script.execute: refresh
 
 sensor:
   - {platform: template, id: set1, internal: true, update_interval: 60s, lambda: 'return id(eff)[0];'}
