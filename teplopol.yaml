@@ -27,9 +27,11 @@ ota:
   - platform: esphome
   - platform: web_server
 
-# Версия 1 — самая лёгкая страница: v3 на ESP8266 с таким числом сущностей
-# не хватает памяти, и страница не открывается. Оформление v1 подгружается
-# из интернета (esphome.io), управление при этом работает напрямую с платой.
+# Версия 1 — самая лёгкая страница. Даже она с ~30 сущностями обрывалась
+# на ESP8266 (не хватало памяти: таблица кончалась на датчиках, скрипт не
+# догружался, значения пустые). Поэтому на странице только сводка по зонам
+# (по строке на зону) — термостаты, реле и датчики скрыты (internal), но
+# работают как прежде. Управление — с экрана. Оформление v1 берётся с esphome.io.
 web_server:
   port: 80
   version: 1
@@ -49,11 +51,12 @@ ads1115:
 sensor:
   # 1 Балкон (плата 1, A0)
   - {platform: ads1115, ads1115_id: ads1, multiplexer: A0_GND, gain: 4.096, id: v1, update_interval: 15s, internal: true}
-  - {platform: resistance, sensor: v1, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res1, name: "Ом 1 Балкон", accuracy_decimals: 0}
+  - {platform: resistance, sensor: v1, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res1, internal: true}
   - platform: ntc
     sensor: res1
     id: t1
     name: "Пол 1 Балкон"
+    internal: true
     calibration:   # таблица из паспорта Valtec VT.AC602 (B≈3330, не 3950)
       - 22.07kOhm -> 5°C
       - 12.091kOhm -> 20°C
@@ -64,11 +67,12 @@ sensor:
 
   # 2 Кухня (плата 1, A1)
   - {platform: ads1115, ads1115_id: ads1, multiplexer: A1_GND, gain: 4.096, id: v2, update_interval: 15s, internal: true}
-  - {platform: resistance, sensor: v2, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res2, name: "Ом 2 Кухня", accuracy_decimals: 0}
+  - {platform: resistance, sensor: v2, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res2, internal: true}
   - platform: ntc
     sensor: res2
     id: t2
     name: "Пол 2 Кухня"
+    internal: true
     calibration:   # таблица из паспорта Valtec VT.AC602 (B≈3330, не 3950)
       - 22.07kOhm -> 5°C
       - 12.091kOhm -> 20°C
@@ -79,11 +83,12 @@ sensor:
 
   # 3 Детская (плата 1, A2)
   - {platform: ads1115, ads1115_id: ads1, multiplexer: A2_GND, gain: 4.096, id: v3, update_interval: 15s, internal: true}
-  - {platform: resistance, sensor: v3, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res3, name: "Ом 3 Детская", accuracy_decimals: 0}
+  - {platform: resistance, sensor: v3, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res3, internal: true}
   - platform: ntc
     sensor: res3
     id: t3
     name: "Пол 3 Детская"
+    internal: true
     calibration:   # таблица из паспорта Valtec VT.AC602 (B≈3330, не 3950)
       - 22.07kOhm -> 5°C
       - 12.091kOhm -> 20°C
@@ -94,11 +99,12 @@ sensor:
 
   # 4 Спальня (плата 1, A3)
   - {platform: ads1115, ads1115_id: ads1, multiplexer: A3_GND, gain: 4.096, id: v4, update_interval: 15s, internal: true}
-  - {platform: resistance, sensor: v4, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res4, name: "Ом 4 Спальня", accuracy_decimals: 0}
+  - {platform: resistance, sensor: v4, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res4, internal: true}
   - platform: ntc
     sensor: res4
     id: t4
     name: "Пол 4 Спальня"
+    internal: true
     calibration:   # таблица из паспорта Valtec VT.AC602 (B≈3330, не 3950)
       - 22.07kOhm -> 5°C
       - 12.091kOhm -> 20°C
@@ -109,11 +115,12 @@ sensor:
 
   # 5 Коридор (плата 2, A0)
   - {platform: ads1115, ads1115_id: ads2, multiplexer: A0_GND, gain: 4.096, id: v5, update_interval: 15s, internal: true}
-  - {platform: resistance, sensor: v5, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res5, name: "Ом 5 Коридор", accuracy_decimals: 0}
+  - {platform: resistance, sensor: v5, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res5, internal: true}
   - platform: ntc
     sensor: res5
     id: t5
     name: "Пол 5 Коридор"
+    internal: true
     calibration:   # таблица из паспорта Valtec VT.AC602 (B≈3330, не 3950)
       - 22.07kOhm -> 5°C
       - 12.091kOhm -> 20°C
@@ -124,11 +131,12 @@ sensor:
 
   # 6 Ванная (плата 2, A1)
   - {platform: ads1115, ads1115_id: ads2, multiplexer: A1_GND, gain: 4.096, id: v6, update_interval: 15s, internal: true}
-  - {platform: resistance, sensor: v6, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res6, name: "Ом 6 Ванная", accuracy_decimals: 0}
+  - {platform: resistance, sensor: v6, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res6, internal: true}
   - platform: ntc
     sensor: res6
     id: t6
     name: "Пол 6 Ванная"
+    internal: true
     calibration:   # таблица из паспорта Valtec VT.AC602 (B≈3330, не 3950)
       - 22.07kOhm -> 5°C
       - 12.091kOhm -> 20°C
@@ -139,11 +147,12 @@ sensor:
 
   # 7 Туалет (плата 2, A2)
   - {platform: ads1115, ads1115_id: ads2, multiplexer: A2_GND, gain: 4.096, id: v7, update_interval: 15s, internal: true}
-  - {platform: resistance, sensor: v7, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res7, name: "Ом 7 Туалет", accuracy_decimals: 0}
+  - {platform: resistance, sensor: v7, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res7, internal: true}
   - platform: ntc
     sensor: res7
     id: t7
     name: "Пол 7 Туалет"
+    internal: true
     calibration:   # таблица из паспорта Valtec VT.AC602 (B≈3330, не 3950)
       - 22.07kOhm -> 5°C
       - 12.091kOhm -> 20°C
@@ -247,6 +256,75 @@ text_sensor:
     name: "Состояние датчиков"
     update_interval: never
 
+  # Сводка по зоне одной строкой: пол, сопротивление датчика, цель, реле
+  - platform: template
+    name: "Зона 1 Балкон"
+    update_interval: 15s
+    lambda: |-
+      char b[96];
+      snprintf(b, sizeof(b), "%.1f° | %.0f Ом | цель %.1f° | %s",
+               id(t1).state, id(res1).state, id(c1).target_temperature,
+               id(r1).state ? "греет" : "закрыто");
+      return std::string(b);
+  - platform: template
+    name: "Зона 2 Кухня"
+    update_interval: 15s
+    lambda: |-
+      char b[96];
+      snprintf(b, sizeof(b), "%.1f° | %.0f Ом | цель %.1f° | %s",
+               id(t2).state, id(res2).state, id(c2).target_temperature,
+               id(r2).state ? "греет" : "закрыто");
+      return std::string(b);
+  - platform: template
+    name: "Зона 3 Детская"
+    update_interval: 15s
+    lambda: |-
+      char b[96];
+      snprintf(b, sizeof(b), "%.1f° | %.0f Ом | цель %.1f° | %s",
+               id(t3).state, id(res3).state, id(c3).target_temperature,
+               id(r3).state ? "греет" : "закрыто");
+      return std::string(b);
+  - platform: template
+    name: "Зона 4 Спальня"
+    update_interval: 15s
+    lambda: |-
+      char b[96];
+      snprintf(b, sizeof(b), "%.1f° | %.0f Ом | цель %.1f° | %s",
+               id(t4).state, id(res4).state, id(c4).target_temperature,
+               id(r4).state ? "греет" : "закрыто");
+      return std::string(b);
+  - platform: template
+    name: "Зона 5 Коридор"
+    update_interval: 15s
+    lambda: |-
+      char b[96];
+      snprintf(b, sizeof(b), "%.1f° | %.0f Ом | цель %.1f° | %s",
+               id(t5).state, id(res5).state, id(c5).target_temperature,
+               id(r5).state ? "греет" : "закрыто");
+      return std::string(b);
+  - platform: template
+    name: "Зона 6 Ванная"
+    update_interval: 15s
+    lambda: |-
+      char b[96];
+      snprintf(b, sizeof(b), "%.1f° | %.0f Ом | цель %.1f° | %s",
+               id(t6).state, id(res6).state, id(c6).target_temperature,
+               id(r6).state ? "греет" : "закрыто");
+      return std::string(b);
+  - platform: template
+    name: "Зона 7 Туалет"
+    update_interval: 15s
+    lambda: |-
+      char b[96];
+      snprintf(b, sizeof(b), "%.1f° | %.0f Ом | цель %.1f° | %s",
+               id(t7).state, id(res7).state, id(c7).target_temperature,
+               id(r7).state ? "греет" : "закрыто");
+      return std::string(b);
+  - platform: template
+    name: "Котёл"
+    update_interval: 15s
+    lambda: 'return std::string(id(r8).state ? "работает" : "ждёт");'
+
 # ---------- Связь с настенным экраном (UDP в домашней сети) ----------
 udp:
 
@@ -270,14 +348,14 @@ binary_sensor:
 
 # ---------- Реле ----------
 switch:
-  - {platform: gpio, pin: GPIO16, name: "Реле 1 Балкон",   id: r1, restore_mode: ALWAYS_OFF}
-  - {platform: gpio, pin: GPIO14, name: "Реле 2 Кухня",   id: r2, restore_mode: ALWAYS_OFF}
-  - {platform: gpio, pin: GPIO12, name: "Реле 3 Детская", id: r3, restore_mode: ALWAYS_OFF}
-  - {platform: gpio, pin: GPIO13, name: "Реле 4 Спальня",  id: r4, restore_mode: ALWAYS_OFF}
-  - {platform: gpio, pin: GPIO15, name: "Реле 5 Коридор",  id: r5, restore_mode: ALWAYS_OFF}
-  - {platform: gpio, pin: GPIO0,  name: "Реле 6 Ванная",  id: r6, restore_mode: ALWAYS_OFF}
-  - {platform: gpio, pin: GPIO4,  name: "Реле 7 Туалет",   id: r7, restore_mode: ALWAYS_OFF}
-  - {platform: gpio, pin: GPIO5,  name: "Реле 8 Котёл",    id: r8, restore_mode: ALWAYS_OFF}
+  - {platform: gpio, pin: GPIO16, name: "Реле 1 Балкон",   id: r1, restore_mode: ALWAYS_OFF, internal: true}
+  - {platform: gpio, pin: GPIO14, name: "Реле 2 Кухня",   id: r2, restore_mode: ALWAYS_OFF, internal: true}
+  - {platform: gpio, pin: GPIO12, name: "Реле 3 Детская", id: r3, restore_mode: ALWAYS_OFF, internal: true}
+  - {platform: gpio, pin: GPIO13, name: "Реле 4 Спальня",  id: r4, restore_mode: ALWAYS_OFF, internal: true}
+  - {platform: gpio, pin: GPIO15, name: "Реле 5 Коридор",  id: r5, restore_mode: ALWAYS_OFF, internal: true}
+  - {platform: gpio, pin: GPIO0,  name: "Реле 6 Ванная",  id: r6, restore_mode: ALWAYS_OFF, internal: true}
+  - {platform: gpio, pin: GPIO4,  name: "Реле 7 Туалет",   id: r7, restore_mode: ALWAYS_OFF, internal: true}
+  - {platform: gpio, pin: GPIO5,  name: "Реле 8 Котёл",    id: r8, restore_mode: ALWAYS_OFF, internal: true}
 
 # ---------- Термостаты зон ----------
 # Сервопривод открывается не чаще раза в 5 минут (бережём привод),
@@ -286,6 +364,7 @@ climate:
   - platform: thermostat
     id: c1
     name: "1 Балкон"
+    internal: true
     sensor: t1
     min_heating_off_time: 300s
     min_heating_run_time: 300s
@@ -302,6 +381,7 @@ climate:
   - platform: thermostat
     id: c2
     name: "2 Кухня"
+    internal: true
     sensor: t2
     min_heating_off_time: 300s
     min_heating_run_time: 300s
@@ -318,6 +398,7 @@ climate:
   - platform: thermostat
     id: c3
     name: "3 Детская"
+    internal: true
     sensor: t3
     min_heating_off_time: 300s
     min_heating_run_time: 300s
@@ -334,6 +415,7 @@ climate:
   - platform: thermostat
     id: c4
     name: "4 Спальня"
+    internal: true
     sensor: t4
     min_heating_off_time: 300s
     min_heating_run_time: 300s
@@ -350,6 +432,7 @@ climate:
   - platform: thermostat
     id: c5
     name: "5 Коридор"
+    internal: true
     sensor: t5
     min_heating_off_time: 300s
     min_heating_run_time: 300s
@@ -366,6 +449,7 @@ climate:
   - platform: thermostat
     id: c6
     name: "6 Ванная"
+    internal: true
     sensor: t6
     min_heating_off_time: 300s
     min_heating_run_time: 300s
@@ -382,6 +466,7 @@ climate:
   - platform: thermostat
     id: c7
     name: "7 Туалет"
+    internal: true
     sensor: t7
     min_heating_off_time: 300s
     min_heating_run_time: 300s
