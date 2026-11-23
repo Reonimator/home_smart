@@ -36,6 +36,7 @@
 | [docs/neptun.md](docs/neptun.md) | План подключения Нептуна |
 | [docs/away-power.md](docs/away-power.md) | Отключение розеток и варочной панели в режиме «Ушёл» |
 | [docs/flashing.md](docs/flashing.md) | Как прошивать с Windows (в том числе с русским именем пользователя) |
+| [docs/plan.md](docs/plan.md) | **Текущее состояние и план**: открытые проблемы, удалённый доступ через VPN, приложение |
 | [docs/history.md](docs/history.md) | Журнал: как делали, какие были ошибки и как их исправили |
 
 ## Файлы
