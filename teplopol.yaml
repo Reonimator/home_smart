@@ -51,7 +51,7 @@ ads1115:
 sensor:
   # 1 Балкон (плата 1, A0)
   - {platform: ads1115, ads1115_id: ads1, multiplexer: A0_GND, gain: 4.096, id: v1, update_interval: 15s, internal: true}
-  - {platform: resistance, sensor: v1, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res1, internal: true}
+  - {platform: resistance, sensor: v1, configuration: DOWNSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res1, internal: true}
   - platform: ntc
     sensor: res1
     id: t1
@@ -67,7 +67,7 @@ sensor:
 
   # 2 Кухня (плата 1, A1)
   - {platform: ads1115, ads1115_id: ads1, multiplexer: A1_GND, gain: 4.096, id: v2, update_interval: 15s, internal: true}
-  - {platform: resistance, sensor: v2, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res2, internal: true}
+  - {platform: resistance, sensor: v2, configuration: DOWNSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res2, internal: true}
   - platform: ntc
     sensor: res2
     id: t2
@@ -83,7 +83,7 @@ sensor:
 
   # 3 Детская (плата 1, A2)
   - {platform: ads1115, ads1115_id: ads1, multiplexer: A2_GND, gain: 4.096, id: v3, update_interval: 15s, internal: true}
-  - {platform: resistance, sensor: v3, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res3, internal: true}
+  - {platform: resistance, sensor: v3, configuration: DOWNSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res3, internal: true}
   - platform: ntc
     sensor: res3
     id: t3
@@ -99,7 +99,7 @@ sensor:
 
   # 4 Спальня (плата 1, A3)
   - {platform: ads1115, ads1115_id: ads1, multiplexer: A3_GND, gain: 4.096, id: v4, update_interval: 15s, internal: true}
-  - {platform: resistance, sensor: v4, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res4, internal: true}
+  - {platform: resistance, sensor: v4, configuration: DOWNSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res4, internal: true}
   - platform: ntc
     sensor: res4
     id: t4
@@ -115,7 +115,7 @@ sensor:
 
   # 5 Коридор (плата 2, A0)
   - {platform: ads1115, ads1115_id: ads2, multiplexer: A0_GND, gain: 4.096, id: v5, update_interval: 15s, internal: true}
-  - {platform: resistance, sensor: v5, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res5, internal: true}
+  - {platform: resistance, sensor: v5, configuration: DOWNSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res5, internal: true}
   - platform: ntc
     sensor: res5
     id: t5
@@ -131,7 +131,7 @@ sensor:
 
   # 6 Ванная (плата 2, A1)
   - {platform: ads1115, ads1115_id: ads2, multiplexer: A1_GND, gain: 4.096, id: v6, update_interval: 15s, internal: true}
-  - {platform: resistance, sensor: v6, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res6, internal: true}
+  - {platform: resistance, sensor: v6, configuration: DOWNSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res6, internal: true}
   - platform: ntc
     sensor: res6
     id: t6
@@ -147,7 +147,7 @@ sensor:
 
   # 7 Туалет (плата 2, A2)
   - {platform: ads1115, ads1115_id: ads2, multiplexer: A2_GND, gain: 4.096, id: v7, update_interval: 15s, internal: true}
-  - {platform: resistance, sensor: v7, configuration: UPSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res7, internal: true}
+  - {platform: resistance, sensor: v7, configuration: DOWNSTREAM, resistor: 10kOhm, reference_voltage: 3.3V, id: res7, internal: true}
   - platform: ntc
     sensor: res7
     id: t7
