@@ -39,6 +39,14 @@ captive_portal:
 ota:
   - platform: esphome
 
+# Связь с Home Assistant (домашний сервер 192.168.1.110). Только чтение:
+# температуры пола, цели, «греет», котёл, режим. Управление остаётся на экране.
+# reboot_timeout: 0s — экран НЕ перезагружается, если Home Assistant выключен.
+api:
+  encryption:
+    key: !secret api_key_ekran
+  reboot_timeout: 0s
+
 time:
   - platform: sntp
     id: sntp_time
@@ -242,21 +250,38 @@ for i in range(1,8):
     A(f"  - {{platform: template, id: set{i}, internal: true, update_interval: 60s, lambda: 'return id(eff)[{i-1}];'}}")
 A("  - {platform: template, id: water_cmd, internal: true, update_interval: 60s, lambda: 'return (float) id(wcmd);'}")
 for i in range(1,8):
+    A(f'  - {{platform: template, name: "Цель {i} {rooms[i-1]}", unit_of_measurement: "°C", device_class: temperature, accuracy_decimals: 1, update_interval: 30s, lambda: \'return id(eff)[{i-1}];\'}}')
+for i in range(1,8):
     A(f'''  - platform: packet_transport
     provider: teplopol
     remote_id: t{i}
     id: rt{i}
-    internal: true
+    name: "Пол {i} {rooms[i-1]}"
+    internal: false
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
     on_value:
       - lambda: 'id(ft)[{i-1}] = x;'
       - script.execute: refresh''')
+A('''
+text_sensor:
+  - platform: template
+    name: "Режим"
+    update_interval: 30s
+    lambda: |-
+      if (id(mode) == 1) return std::string("Ушёл");
+      return std::string(id(night_active) ? "Дома, ночь" : "Дома");''')
 A('\nbinary_sensor:')
 for i in range(1,8):
     A(f'''  - platform: packet_transport
     provider: teplopol
     remote_id: h{i}
     id: rh{i}
-    internal: true
+    name: "Греет {i} {rooms[i-1]}"
+    internal: false
+    device_class: heat
     on_state:
       - lambda: 'id(hs)[{i-1}] = x;'
       - script.execute: refresh''')
@@ -264,7 +289,9 @@ A('''  - platform: packet_transport
     provider: teplopol
     remote_id: h8
     id: rh8
-    internal: true
+    name: "Котёл"
+    internal: false
+    device_class: heat
     on_state:
       - lambda: 'id(boiler) = x;'
       - script.execute: refresh
