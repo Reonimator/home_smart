@@ -1,0 +1,54 @@
+# Панель Home Assistant «Тёплый пол». Вставляется один раз: Панели → панель → ✏️ → ⋮ → Редактор кода.
+title: Тёплый пол
+views:
+  - title: Пол
+    icon: mdi:heating-coil
+    cards:
+      - type: horizontal-stack
+        cards:
+          - {type: tile, entity: sensor.ekran_rezhim, name: Режим, icon: mdi:home-account}
+          - {type: tile, entity: binary_sensor.ekran_kotiol, name: Котёл, icon: mdi:water-boiler, color: deep-orange}
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - {type: tile, entity: sensor.ekran_pol_1_balkon, name: Балкон, icon: mdi:heating-coil, color: orange}
+          - {type: tile, entity: sensor.ekran_pol_2_kukhnia, name: Кухня, icon: mdi:heating-coil, color: orange}
+          - {type: tile, entity: sensor.ekran_pol_3_detskaia, name: Детская, icon: mdi:heating-coil, color: orange}
+          - {type: tile, entity: sensor.ekran_pol_4_spal_nia, name: Спальня, icon: mdi:heating-coil, color: orange}
+          - {type: tile, entity: sensor.ekran_pol_5_koridor, name: Коридор, icon: mdi:heating-coil, color: orange}
+          - {type: tile, entity: sensor.ekran_pol_6_vannaia, name: Ванная, icon: mdi:heating-coil, color: orange}
+          - {type: tile, entity: sensor.ekran_pol_7_tualet, name: Туалет, icon: mdi:heating-coil, color: orange}
+      - type: glance
+        title: Цели
+        columns: 4
+        entities:
+          - {entity: sensor.ekran_tsel_1_balkon, name: Балкон}
+          - {entity: sensor.ekran_tsel_2_kukhnia, name: Кухня}
+          - {entity: sensor.ekran_tsel_3_detskaia, name: Детская}
+          - {entity: sensor.ekran_tsel_4_spal_nia, name: Спальня}
+          - {entity: sensor.ekran_tsel_5_koridor, name: Коридор}
+          - {entity: sensor.ekran_tsel_6_vannaia, name: Ванная}
+          - {entity: sensor.ekran_tsel_7_tualet, name: Туалет}
+      - type: glance
+        title: Сейчас греет
+        columns: 4
+        entities:
+          - {entity: binary_sensor.ekran_greet_1_balkon, name: Балкон}
+          - {entity: binary_sensor.ekran_greet_2_kukhnia, name: Кухня}
+          - {entity: binary_sensor.ekran_greet_3_detskaia, name: Детская}
+          - {entity: binary_sensor.ekran_greet_4_spal_nia, name: Спальня}
+          - {entity: binary_sensor.ekran_greet_5_koridor, name: Коридор}
+          - {entity: binary_sensor.ekran_greet_6_vannaia, name: Ванная}
+          - {entity: binary_sensor.ekran_greet_7_tualet, name: Туалет}
+      - type: history-graph
+        title: Пол за сутки
+        hours_to_show: 24
+        entities:
+          - {entity: sensor.ekran_pol_1_balkon, name: Балкон}
+          - {entity: sensor.ekran_pol_2_kukhnia, name: Кухня}
+          - {entity: sensor.ekran_pol_3_detskaia, name: Детская}
+          - {entity: sensor.ekran_pol_4_spal_nia, name: Спальня}
+          - {entity: sensor.ekran_pol_5_koridor, name: Коридор}
+          - {entity: sensor.ekran_pol_6_vannaia, name: Ванная}
+          - {entity: sensor.ekran_pol_7_tualet, name: Туалет}
