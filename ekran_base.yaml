@@ -360,6 +360,107 @@ text_sensor:
       if (id(mode) == 1) return std::string("Ушёл");
       return std::string(id(night_active) ? "Дома, ночь" : "Дома");
 
+# ---------- Управление из Home Assistant ----------
+# Цели только в пределах 15–35°. Режим «Дома» из HA воду НЕ открывает
+# (вода из сети — только закрыть; открыть можно только кнопкой на экране).
+select:
+  - platform: template
+    name: "Режим пола"
+    options: ["Дома", "Ушёл"]
+    update_interval: 5s
+    lambda: 'return std::string(id(mode) == 1 ? "Ушёл" : "Дома");'
+    set_action:
+      - lambda: |-
+          if (x == "Ушёл") { id(mode) = 1; id(wcmd) = 1; }
+          else { id(mode) = 0; }
+      - script.execute: compute
+
+number:
+  - platform: template
+    name: "Уставка 1 Балкон"
+    unit_of_measurement: "°C"
+    min_value: 15
+    max_value: 35
+    step: 0.5
+    mode: box
+    update_interval: 5s
+    lambda: 'return id(tg)[0];'
+    set_action:
+      - lambda: 'id(tg)[0] = std::max(15.0f, std::min(35.0f, x));'
+      - script.execute: compute
+  - platform: template
+    name: "Уставка 2 Кухня"
+    unit_of_measurement: "°C"
+    min_value: 15
+    max_value: 35
+    step: 0.5
+    mode: box
+    update_interval: 5s
+    lambda: 'return id(tg)[1];'
+    set_action:
+      - lambda: 'id(tg)[1] = std::max(15.0f, std::min(35.0f, x));'
+      - script.execute: compute
+  - platform: template
+    name: "Уставка 3 Детская"
+    unit_of_measurement: "°C"
+    min_value: 15
+    max_value: 35
+    step: 0.5
+    mode: box
+    update_interval: 5s
+    lambda: 'return id(tg)[2];'
+    set_action:
+      - lambda: 'id(tg)[2] = std::max(15.0f, std::min(35.0f, x));'
+      - script.execute: compute
+  - platform: template
+    name: "Уставка 4 Спальня"
+    unit_of_measurement: "°C"
+    min_value: 15
+    max_value: 35
+    step: 0.5
+    mode: box
+    update_interval: 5s
+    lambda: 'return id(tg)[3];'
+    set_action:
+      - lambda: 'id(tg)[3] = std::max(15.0f, std::min(35.0f, x));'
+      - script.execute: compute
+  - platform: template
+    name: "Уставка 5 Коридор"
+    unit_of_measurement: "°C"
+    min_value: 15
+    max_value: 35
+    step: 0.5
+    mode: box
+    update_interval: 5s
+    lambda: 'return id(tg)[4];'
+    set_action:
+      - lambda: 'id(tg)[4] = std::max(15.0f, std::min(35.0f, x));'
+      - script.execute: compute
+  - platform: template
+    name: "Уставка 6 Ванная"
+    unit_of_measurement: "°C"
+    min_value: 15
+    max_value: 35
+    step: 0.5
+    mode: box
+    update_interval: 5s
+    lambda: 'return id(tg)[5];'
+    set_action:
+      - lambda: 'id(tg)[5] = std::max(15.0f, std::min(35.0f, x));'
+      - script.execute: compute
+  - platform: template
+    name: "Уставка 7 Туалет"
+    unit_of_measurement: "°C"
+    min_value: 15
+    max_value: 35
+    step: 0.5
+    mode: box
+    update_interval: 5s
+    lambda: 'return id(tg)[6];'
+    set_action:
+      - lambda: 'id(tg)[6] = std::max(15.0f, std::min(35.0f, x));'
+      - script.execute: compute
+
 binary_sensor:
   - platform: packet_transport
     provider: teplopol

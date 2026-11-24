@@ -19,6 +19,17 @@ views:
           - {type: tile, entity: sensor.ekran_pol_5_koridor, name: Коридор, icon: mdi:heating-coil, color: orange}
           - {type: tile, entity: sensor.ekran_pol_6_vannaia, name: Ванная, icon: mdi:heating-coil, color: orange}
           - {type: tile, entity: sensor.ekran_pol_7_tualet, name: Туалет, icon: mdi:heating-coil, color: orange}
+      - type: entities
+        title: Управление
+        entities:
+          - {entity: select.ekran_rezhim_pola, name: Режим}
+          - {entity: number.ekran_ustavka_1_balkon, name: Балкон}
+          - {entity: number.ekran_ustavka_2_kukhnia, name: Кухня}
+          - {entity: number.ekran_ustavka_3_detskaia, name: Детская}
+          - {entity: number.ekran_ustavka_4_spal_nia, name: Спальня}
+          - {entity: number.ekran_ustavka_5_koridor, name: Коридор}
+          - {entity: number.ekran_ustavka_6_vannaia, name: Ванная}
+          - {entity: number.ekran_ustavka_7_tualet, name: Туалет}
       - type: glance
         title: Цели
         columns: 4

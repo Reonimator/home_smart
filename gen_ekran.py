@@ -273,6 +273,36 @@ text_sensor:
     lambda: |-
       if (id(mode) == 1) return std::string("Ушёл");
       return std::string(id(night_active) ? "Дома, ночь" : "Дома");''')
+A('''
+# ---------- Управление из Home Assistant ----------
+# Цели только в пределах 15–35°. Режим «Дома» из HA воду НЕ открывает
+# (вода из сети — только закрыть; открыть можно только кнопкой на экране).
+select:
+  - platform: template
+    name: "Режим пола"
+    options: ["Дома", "Ушёл"]
+    update_interval: 5s
+    lambda: 'return std::string(id(mode) == 1 ? "Ушёл" : "Дома");'
+    set_action:
+      - lambda: |-
+          if (x == "Ушёл") { id(mode) = 1; id(wcmd) = 1; }
+          else { id(mode) = 0; }
+      - script.execute: compute
+
+number:''')
+for i in range(1,8):
+    A(f'''  - platform: template
+    name: "Уставка {i} {rooms[i-1]}"
+    unit_of_measurement: "°C"
+    min_value: 15
+    max_value: 35
+    step: 0.5
+    mode: box
+    update_interval: 5s
+    lambda: 'return id(tg)[{i-1}];'
+    set_action:
+      - lambda: 'id(tg)[{i-1}] = std::max(15.0f, std::min(35.0f, x));'
+      - script.execute: compute''')
 A('\nbinary_sensor:')
 for i in range(1,8):
     A(f'''  - platform: packet_transport
