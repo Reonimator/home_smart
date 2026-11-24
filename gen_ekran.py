@@ -28,11 +28,11 @@ logger:
   hardware_uart: UART0
 
 wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
+  ssid: ${wifi_ssid}
+  password: ${wifi_password}
   ap:
     ssid: "Ekran-Setup"
-    password: !secret ap_password
+    password: ${ap_password}
 
 captive_portal:
 
@@ -44,7 +44,7 @@ ota:
 # reboot_timeout: 0s — экран НЕ перезагружается, если Home Assistant выключен.
 api:
   encryption:
-    key: !secret api_key_ekran
+    key: ${api_key_ekran}
   reboot_timeout: 0s
 
 time:
@@ -539,4 +539,17 @@ for k,(title,minus,plus,lid) in enumerate(rows):
                   on_click:
                     - lambda: '{plus}'
                     - script.execute: compute''')
-open('ekran.yaml','w',encoding='utf-8').write("\n".join(L)+"\n")
+L.insert(0, "# СГЕНЕРИРОВАНО gen_ekran.py — не править руками. Пароли приходят через substitutions\n# из ekran.yaml (esp.bat) или из конфигурации на домашнем сервере (см. docs/server.md).")
+open('ekran_base.yaml','w',encoding='utf-8').write("\n".join(L)+"\n")
+open('ekran.yaml','w',encoding='utf-8').write('''# Экран для esp.bat: пароли из secrets.yaml, вся конфигурация — в ekran_base.yaml
+# (генерируется gen_ekran.py). На домашнем сервере используется тот же ekran_base.yaml
+# прямо с GitHub, см. docs/server.md.
+substitutions:
+  wifi_ssid: !secret wifi_ssid
+  wifi_password: !secret wifi_password
+  ap_password: !secret ap_password
+  api_key_ekran: !secret api_key_ekran
+
+packages:
+  base: !include ekran_base.yaml
+''')
