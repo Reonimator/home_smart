@@ -36,6 +36,14 @@ captive_portal:
 ota:
   - platform: esphome
 
+# Связь с Home Assistant (домашний сервер 192.168.1.110). Только чтение:
+# температуры пола, цели, «греет», котёл, режим. Управление остаётся на экране.
+# reboot_timeout: 0s — экран НЕ перезагружается, если Home Assistant выключен.
+api:
+  encryption:
+    key: !secret api_key_ekran
+  reboot_timeout: 0s
+
 time:
   - platform: sntp
     id: sntp_time
@@ -243,11 +251,23 @@ sensor:
   - {platform: template, id: set6, internal: true, update_interval: 60s, lambda: 'return id(eff)[5];'}
   - {platform: template, id: set7, internal: true, update_interval: 60s, lambda: 'return id(eff)[6];'}
   - {platform: template, id: water_cmd, internal: true, update_interval: 60s, lambda: 'return (float) id(wcmd);'}
+  - {platform: template, name: "Цель 1 Балкон", unit_of_measurement: "°C", device_class: temperature, accuracy_decimals: 1, update_interval: 30s, lambda: 'return id(eff)[0];'}
+  - {platform: template, name: "Цель 2 Кухня", unit_of_measurement: "°C", device_class: temperature, accuracy_decimals: 1, update_interval: 30s, lambda: 'return id(eff)[1];'}
+  - {platform: template, name: "Цель 3 Детская", unit_of_measurement: "°C", device_class: temperature, accuracy_decimals: 1, update_interval: 30s, lambda: 'return id(eff)[2];'}
+  - {platform: template, name: "Цель 4 Спальня", unit_of_measurement: "°C", device_class: temperature, accuracy_decimals: 1, update_interval: 30s, lambda: 'return id(eff)[3];'}
+  - {platform: template, name: "Цель 5 Коридор", unit_of_measurement: "°C", device_class: temperature, accuracy_decimals: 1, update_interval: 30s, lambda: 'return id(eff)[4];'}
+  - {platform: template, name: "Цель 6 Ванная", unit_of_measurement: "°C", device_class: temperature, accuracy_decimals: 1, update_interval: 30s, lambda: 'return id(eff)[5];'}
+  - {platform: template, name: "Цель 7 Туалет", unit_of_measurement: "°C", device_class: temperature, accuracy_decimals: 1, update_interval: 30s, lambda: 'return id(eff)[6];'}
   - platform: packet_transport
     provider: teplopol
     remote_id: t1
     id: rt1
-    internal: true
+    name: "Пол 1 Балкон"
+    internal: false
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
     on_value:
       - lambda: 'id(ft)[0] = x;'
       - script.execute: refresh
@@ -255,7 +275,12 @@ sensor:
     provider: teplopol
     remote_id: t2
     id: rt2
-    internal: true
+    name: "Пол 2 Кухня"
+    internal: false
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
     on_value:
       - lambda: 'id(ft)[1] = x;'
       - script.execute: refresh
@@ -263,7 +288,12 @@ sensor:
     provider: teplopol
     remote_id: t3
     id: rt3
-    internal: true
+    name: "Пол 3 Детская"
+    internal: false
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
     on_value:
       - lambda: 'id(ft)[2] = x;'
       - script.execute: refresh
@@ -271,7 +301,12 @@ sensor:
     provider: teplopol
     remote_id: t4
     id: rt4
-    internal: true
+    name: "Пол 4 Спальня"
+    internal: false
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
     on_value:
       - lambda: 'id(ft)[3] = x;'
       - script.execute: refresh
@@ -279,7 +314,12 @@ sensor:
     provider: teplopol
     remote_id: t5
     id: rt5
-    internal: true
+    name: "Пол 5 Коридор"
+    internal: false
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
     on_value:
       - lambda: 'id(ft)[4] = x;'
       - script.execute: refresh
@@ -287,7 +327,12 @@ sensor:
     provider: teplopol
     remote_id: t6
     id: rt6
-    internal: true
+    name: "Пол 6 Ванная"
+    internal: false
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
     on_value:
       - lambda: 'id(ft)[5] = x;'
       - script.execute: refresh
@@ -295,17 +340,32 @@ sensor:
     provider: teplopol
     remote_id: t7
     id: rt7
-    internal: true
+    name: "Пол 7 Туалет"
+    internal: false
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
     on_value:
       - lambda: 'id(ft)[6] = x;'
       - script.execute: refresh
+
+text_sensor:
+  - platform: template
+    name: "Режим"
+    update_interval: 30s
+    lambda: |-
+      if (id(mode) == 1) return std::string("Ушёл");
+      return std::string(id(night_active) ? "Дома, ночь" : "Дома");
 
 binary_sensor:
   - platform: packet_transport
     provider: teplopol
     remote_id: h1
     id: rh1
-    internal: true
+    name: "Греет 1 Балкон"
+    internal: false
+    device_class: heat
     on_state:
       - lambda: 'id(hs)[0] = x;'
       - script.execute: refresh
@@ -313,7 +373,9 @@ binary_sensor:
     provider: teplopol
     remote_id: h2
     id: rh2
-    internal: true
+    name: "Греет 2 Кухня"
+    internal: false
+    device_class: heat
     on_state:
       - lambda: 'id(hs)[1] = x;'
       - script.execute: refresh
@@ -321,7 +383,9 @@ binary_sensor:
     provider: teplopol
     remote_id: h3
     id: rh3
-    internal: true
+    name: "Греет 3 Детская"
+    internal: false
+    device_class: heat
     on_state:
       - lambda: 'id(hs)[2] = x;'
       - script.execute: refresh
@@ -329,7 +393,9 @@ binary_sensor:
     provider: teplopol
     remote_id: h4
     id: rh4
-    internal: true
+    name: "Греет 4 Спальня"
+    internal: false
+    device_class: heat
     on_state:
       - lambda: 'id(hs)[3] = x;'
       - script.execute: refresh
@@ -337,7 +403,9 @@ binary_sensor:
     provider: teplopol
     remote_id: h5
     id: rh5
-    internal: true
+    name: "Греет 5 Коридор"
+    internal: false
+    device_class: heat
     on_state:
       - lambda: 'id(hs)[4] = x;'
       - script.execute: refresh
@@ -345,7 +413,9 @@ binary_sensor:
     provider: teplopol
     remote_id: h6
     id: rh6
-    internal: true
+    name: "Греет 6 Ванная"
+    internal: false
+    device_class: heat
     on_state:
       - lambda: 'id(hs)[5] = x;'
       - script.execute: refresh
@@ -353,7 +423,9 @@ binary_sensor:
     provider: teplopol
     remote_id: h7
     id: rh7
-    internal: true
+    name: "Греет 7 Туалет"
+    internal: false
+    device_class: heat
     on_state:
       - lambda: 'id(hs)[6] = x;'
       - script.execute: refresh
@@ -361,7 +433,9 @@ binary_sensor:
     provider: teplopol
     remote_id: h8
     id: rh8
-    internal: true
+    name: "Котёл"
+    internal: false
+    device_class: heat
     on_state:
       - lambda: 'id(boiler) = x;'
       - script.execute: refresh
