@@ -86,9 +86,33 @@ Home Assistant: `http://192.168.1.110:8123` (адрес закреплён в р
 
 Что экран отдаёт в Home Assistant (только чтение): «Пол N Комната» (°C), «Цель N Комната» (°C), «Греет N Комната», «Котёл», «Режим» (Дома / Дома, ночь / Ушёл), «Подсветка». Управление целями и режимом — по-прежнему с экрана.
 
-1. В `secrets.yaml` добавить `api_key_ekran` (как получить — в `secrets.example.yaml`).
-2. `esp.bat ekran.yaml`.
-3. Home Assistant → Настройки → Устройства и службы: появится «ekran» → Настроить → ввести тот же ключ.
+### Прошивка экрана с сервера (без компьютера)
+
+Дополнение **ESPHome Device Builder** в Home Assistant. Вся конфигурация экрана берётся с GitHub (`ekran_base.yaml`), на сервере хранятся только пароли.
+
+1. ESPHome → ⋮ → **Secrets**: по одному добавить `wifi_ssid`, `wifi_password`, `ap_password`, `api_key_ekran` (ключ: на сервере `openssl rand -base64 32`).
+2. Создать устройство `ekran` (ESP32-S3), открыть Edit, заменить всё на:
+
+```yaml
+substitutions:
+  wifi_ssid: !secret wifi_ssid
+  wifi_password: !secret wifi_password
+  ap_password: !secret ap_password
+  api_key_ekran: !secret api_key_ekran
+
+packages:
+  ekran:
+    url: https://github.com/Reonimator/home_smart
+    ref: main
+    files: [ekran_base.yaml]
+    refresh: 0s
+```
+
+3. Save → Install → Wirelessly. Каждая следующая сборка сама берёт свежий `main`.
+
+С компьютера по-прежнему можно: `esp.bat ekran.yaml` (обёртка с паролями из `secrets.yaml`).
+
+4. Home Assistant → Настройки → Устройства и службы: появится «ekran» → Настроить → ввести тот же ключ.
 
 `reboot_timeout: 0s` — экран не перезагружается, если сервер выключен. Пол работает и без Home Assistant.
 Нептун подключим после того, как заработает связь по RS-485; кнопку «Открыть воду» в Home Assistant не выводим (вода из сети — только закрыть).
