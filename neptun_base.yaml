@@ -7,7 +7,8 @@
 #   HR10 слово управления: бит0 звук, бит1 краны (1 открыть / 0 закрыть).
 #   HR11 слово статуса: бит0 протечка, бит1 краны закрыты, бит2 сервис кранов.
 # У другой модели Нептуна (с радиодатчиками и ИБП, тип 0xCB43 в IR0, см. github.com/progist1/ha-neptun-modbus)
-# карта иная: coil 0 протечка, coil 1 краны. Поэтому читаем и IR0, а кнопки кранов работают только при HR0 = 0x4E42.
+# карта иная: coil 0 протечка, coil 1 краны. Кнопки кранов работают только при HR0 = 0x4E42.
+# 26.11 проверено на нашем Нептуне: HR0 = 0x4E42, прошивка 1, адрес 1, 9600, HR10 = 3, HR11 = 0.
 # Связь с экраном (режим «Ушёл» → закрыть воду) включим ПОСЛЕ проверки.
 # Безопасность: кнопка «Открыть» срабатывает только при известном статусе и без протечки.
 #
@@ -88,7 +89,6 @@ modbus_controller:
 
 sensor:
   - {platform: modbus_controller, modbus_controller_id: nep, id: hr0, name: "HR0 тип (ждём 20034)", register_type: holding, address: 0, value_type: U_WORD, accuracy_decimals: 0}
-  - {platform: modbus_controller, modbus_controller_id: nep, name: "IR0 тип другой модели (52035 = 0xCB43)", register_type: read, address: 0, value_type: U_WORD, accuracy_decimals: 0}
   - {platform: modbus_controller, modbus_controller_id: nep, name: "HR4 версия ПО", register_type: holding, address: 4, value_type: U_WORD, accuracy_decimals: 0}
   - {platform: modbus_controller, modbus_controller_id: nep, name: "HR5 адрес Modbus", register_type: holding, address: 5, value_type: U_WORD, accuracy_decimals: 0}
   - {platform: modbus_controller, modbus_controller_id: nep, name: "HR6 скорость (3 = 9600)", register_type: holding, address: 6, value_type: U_WORD, accuracy_decimals: 0}
