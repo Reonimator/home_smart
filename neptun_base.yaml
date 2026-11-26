@@ -1,0 +1,136 @@
+# Нептун Base RS ↔ ESP32-C3 SuperMini + XY-017 (RS-485, Modbus RTU)
+# Пароли приходят через substitutions из neptun.yaml (esp.bat) или из конфигурации
+# на домашнем сервере (ESPHome Device Builder, пакет с GitHub — см. docs/server.md).
+# Карта регистров — официальная «ModBus_Карта памяти регистров Base» (прошивка Нептуна 1.0):
+#   адрес 1, 9600 8N1, ТОЛЬКО holding-регистры: чтение 0x03, запись 0x10.
+#   HR0 = 0x4E42 (20034) тип устройства — если это число видно на странице, связь есть.
+#   HR10 слово управления: бит0 звук, бит1 краны (1 открыть / 0 закрыть).
+#   HR11 слово статуса: бит0 протечка, бит1 краны закрыты, бит2 сервис кранов.
+# У другой модели Нептуна (с радиодатчиками и ИБП, тип 0xCB43 в IR0, см. github.com/progist1/ha-neptun-modbus)
+# карта иная: coil 0 протечка, coil 1 краны. Поэтому читаем и IR0, а кнопки кранов работают только при HR0 = 0x4E42.
+# Связь с экраном (режим «Ушёл» → закрыть воду) включим ПОСЛЕ проверки.
+# Безопасность: кнопка «Открыть» срабатывает только при известном статусе и без протечки.
+#
+# Подключение:
+#   XY-017 VCC → 3V3, GND → GND, TXD → GPIO20 (RX), RXD → GPIO21 (TX)
+#   (если связи нет — поменяйте местами tx_pin/rx_pin ниже, перепаивать не нужно)
+#   XY-017 A+ → Нептун D+, B- → Нептун D-, GND → Нептун GNDRS
+#   Питание ESP32-C3: 5V и GND с разъёма прошивки платы реле
+
+substitutions:
+  tx_pin: GPIO21
+  rx_pin: GPIO20
+
+esphome:
+  name: neptun
+  friendly_name: Нептун
+
+esp32:
+  board: esp32-c3-devkitm-1
+  framework:
+    type: esp-idf
+
+logger:
+  level: DEBUG
+  hardware_uart: USB_SERIAL_JTAG   # журнал только в USB, чтобы он никогда не попал на GPIO20/21 (линию RS-485)
+  logs:
+    sensor: INFO
+    binary_sensor: INFO
+    text_sensor: INFO
+
+wifi:
+  ssid: ${wifi_ssid}
+  password: ${wifi_password}
+  output_power: 8.5dB   # у SuperMini слабая антенна: на полной мощности Wi-Fi часто отваливается
+  ap:
+    ssid: "Neptun-Setup"
+    password: ${ap_password}
+
+captive_portal:
+
+ota:
+  - platform: esphome
+  - platform: web_server
+
+web_server:
+  port: 80
+  version: 3
+  local: true
+
+uart:
+  id: rs485
+  tx_pin: ${tx_pin}
+  rx_pin: ${rx_pin}
+  baud_rate: 9600
+  data_bits: 8
+  parity: NONE
+  stop_bits: 1
+  # Сырые байты в журнале: «>>>» — что отправили, «<<<» — что пришло.
+  # Если «<<<» нет совсем — Нептун не отвечает (провода/питание/пины), а не «не та карта регистров».
+  debug:
+    direction: BOTH
+    dummy_receiver: false
+    after:
+      timeout: 10ms
+    sequence:
+      - lambda: UARTDebug::log_hex(direction, bytes, ' ');
+
+modbus:
+  id: mb
+  uart_id: rs485
+
+modbus_controller:
+  - id: nep
+    modbus_id: mb
+    address: 1
+    update_interval: 5s
+    command_throttle: 100ms
+
+sensor:
+  - {platform: modbus_controller, modbus_controller_id: nep, id: hr0, name: "HR0 тип (ждём 20034)", register_type: holding, address: 0, value_type: U_WORD, accuracy_decimals: 0}
+  - {platform: modbus_controller, modbus_controller_id: nep, name: "IR0 тип другой модели (52035 = 0xCB43)", register_type: read, address: 0, value_type: U_WORD, accuracy_decimals: 0}
+  - {platform: modbus_controller, modbus_controller_id: nep, name: "HR4 версия ПО", register_type: holding, address: 4, value_type: U_WORD, accuracy_decimals: 0}
+  - {platform: modbus_controller, modbus_controller_id: nep, name: "HR5 адрес Modbus", register_type: holding, address: 5, value_type: U_WORD, accuracy_decimals: 0}
+  - {platform: modbus_controller, modbus_controller_id: nep, name: "HR6 скорость (3 = 9600)", register_type: holding, address: 6, value_type: U_WORD, accuracy_decimals: 0}
+  - {platform: modbus_controller, modbus_controller_id: nep, name: "HR7 сирена, мин", register_type: holding, address: 7, value_type: U_WORD, accuracy_decimals: 0}
+  - {platform: modbus_controller, modbus_controller_id: nep, name: "HR8 питание кранов, мин", register_type: holding, address: 8, value_type: U_WORD, accuracy_decimals: 0}
+  - {platform: modbus_controller, modbus_controller_id: nep, name: "HR9 сервис кранов, дней", register_type: holding, address: 9, value_type: U_WORD, accuracy_decimals: 0}
+  - {platform: modbus_controller, modbus_controller_id: nep, id: hr10, name: "HR10 управление", register_type: holding, address: 10, value_type: U_WORD, accuracy_decimals: 0}
+  - {platform: modbus_controller, modbus_controller_id: nep, id: hr11, name: "HR11 статус", register_type: holding, address: 11, value_type: U_WORD, accuracy_decimals: 0}
+  - {platform: wifi_signal, name: "Wi-Fi сигнал", update_interval: 60s}
+
+binary_sensor:
+  - {platform: modbus_controller, modbus_controller_id: nep, name: "Протечка", register_type: holding, address: 11, bitmask: 0x0001, device_class: moisture}
+  - {platform: modbus_controller, modbus_controller_id: nep, name: "Краны закрыты", register_type: holding, address: 11, bitmask: 0x0002}
+  - {platform: modbus_controller, modbus_controller_id: nep, name: "Сервис кранов идёт", register_type: holding, address: 11, bitmask: 0x0004}
+
+button:
+  - platform: template
+    name: "Закрыть воду"
+    on_press:
+      - lambda: |-
+          if (id(hr0).state != 0x4E42) {
+            ESP_LOGW("neptun", "Закрыть: отказ — HR0 не 0x4E42, это не Base RS или нет связи");
+            return;
+          }
+          // бит1 = 0 (закрыть), звук (бит0) сохраняем; если HR10 ещё не прочитан — звук оставляем включённым
+          uint16_t ctrl = std::isnan(id(hr10).state) ? 0x0001 : (uint16_t) id(hr10).state;
+          std::vector<uint16_t> data = {(uint16_t) (ctrl & ~0x0002)};
+          id(nep)->queue_command(modbus_controller::ModbusCommandItem::create_write_multiple_command(id(nep), 10, 1, data));
+          ESP_LOGW("neptun", "Команда: ЗАКРЫТЬ воду (HR10 = %u)", data[0]);
+  - platform: template
+    name: "Открыть воду (только без протечки)"
+    on_press:
+      - lambda: |-
+          if (id(hr0).state != 0x4E42 || std::isnan(id(hr11).state) || std::isnan(id(hr10).state)) {
+            ESP_LOGW("neptun", "Открыть: отказ — статус Нептуна неизвестен");
+            return;
+          }
+          if (((uint16_t) id(hr11).state) & 0x0001) {
+            ESP_LOGW("neptun", "Открыть: отказ — Нептун видит протечку");
+            return;
+          }
+          std::vector<uint16_t> data = {(uint16_t) (((uint16_t) id(hr10).state) | 0x0002)};
+          id(nep)->queue_command(modbus_controller::ModbusCommandItem::create_write_multiple_command(id(nep), 10, 1, data));
+          ESP_LOGW("neptun", "Команда: ОТКРЫТЬ воду (HR10 = %u)", data[0]);
+  - {platform: restart, name: "Перезагрузка"}

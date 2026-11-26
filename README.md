@@ -45,7 +45,7 @@
 |---|---|
 | `teplopol.yaml` | Прошивка платы реле (ESP12F_Relay_X8, ESP8266) |
 | `ekran.yaml` | Прошивка экрана (Sunton ESP32-8048S070C) |
-| `neptun.yaml` | Нептун через RS-485 (ESP32-C3), тестовая |
+| `neptun.yaml` / `neptun_base.yaml` | Нептун через RS-485 (ESP32-C3): обёртка для esp.bat / конфигурация (на сервере — пакетом с GitHub) |
 | `neptun_scan.yaml` | Временная: ищет адрес и скорость Нептуна на линии RS-485 |
 | `gen_ekran.py` | Генератор `ekran.yaml`: правки вносятся в него, потом `python gen_ekran.py` |
 | `esp.bat` | Забирает свежие файлы с GitHub и прошивает: `esp.bat ekran.yaml` |
