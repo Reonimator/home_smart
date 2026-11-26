@@ -1,0 +1,17 @@
+# Фото для экрана: обработка на Home Assistant. Вставить в конец /config/configuration.yaml
+# (File editor), затем Настройки → Система → Перезапуск. Сам скрипт: /config/ekran_foto.py
+# (скопировать из ha/ekran_foto.py). Подробно — docs/foto.md.
+shell_command:
+  ekran_foto: python3 /config/ekran_foto.py
+
+automation ekran_foto:
+  - alias: "Экран: обновить фото"
+    id: ekran_foto_update
+    mode: single
+    triggers:
+      - trigger: time_pattern
+        minutes: "/5"
+      - trigger: homeassistant
+        event: start
+    actions:
+      - action: shell_command.ekran_foto
