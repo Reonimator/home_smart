@@ -169,6 +169,8 @@ globals:
   - {id: n_start, type: int, restore_value: true, initial_value: '23'}
   - {id: n_end, type: int, restore_value: true, initial_value: '7'}
   - {id: night_t, type: float, restore_value: true, initial_value: '22'}
+  # в каких комнатах ночью снижать температуру (галочки в настройках)
+  - {id: night_rm, type: 'std::array<bool, 7>', restore_value: true, initial_value: '{{true, true, true, true, true, true, true}}'}
   - {id: away_t, type: float, restore_value: true, initial_value: '15'}
   - {id: sleep_min, type: int, restore_value: true, initial_value: '2'}
   # фотогалерея: смена фото раз в foto_iv секунд, 0 — выключена (экран просто гаснет)
@@ -198,7 +200,7 @@ script:
           }
           id(night_active) = night;
           for (int i = 0; i < 7; i++)
-            id(eff)[i] = (id(mode) == 1) ? id(away_t) : (night ? id(night_t) : id(tg)[i]);
+            id(eff)[i] = (id(mode) == 1) ? id(away_t) : ((night && id(night_rm)[i]) ? id(night_t) : id(tg)[i]);
           // сразу отправляем на плату, не дожидаясь опроса
           id(set1).publish_state(id(eff)[0]); id(set2).publish_state(id(eff)[1]);
           id(set3).publish_state(id(eff)[2]); id(set4).publish_state(id(eff)[3]);
@@ -262,6 +264,13 @@ script:
           snprintf(b, sizeof(b), "%02d:00", id(n_start)); ST(id(s_start), b);
           snprintf(b, sizeof(b), "%02d:00", id(n_end)); ST(id(s_end), b);
           snprintf(b, sizeof(b), "%.1f°", id(night_t)); ST(id(s_nt), b);
+          BG(id(b_nr0), id(night_rm)[0] ? 0x185FA5 : 0x455A64);
+          BG(id(b_nr1), id(night_rm)[1] ? 0x185FA5 : 0x455A64);
+          BG(id(b_nr2), id(night_rm)[2] ? 0x185FA5 : 0x455A64);
+          BG(id(b_nr3), id(night_rm)[3] ? 0x185FA5 : 0x455A64);
+          BG(id(b_nr4), id(night_rm)[4] ? 0x185FA5 : 0x455A64);
+          BG(id(b_nr5), id(night_rm)[5] ? 0x185FA5 : 0x455A64);
+          BG(id(b_nr6), id(night_rm)[6] ? 0x185FA5 : 0x455A64);
           snprintf(b, sizeof(b), "%.1f°", id(away_t)); ST(id(s_at), b);
           snprintf(b, sizeof(b), "%d мин", id(sleep_min)); ST(id(s_sl), b);
           if (id(foto_iv) <= 0) ST(id(s_foto), "Выкл");
@@ -318,7 +327,7 @@ script:
           lv_arc_set_value(id(r_arc), (int)(id(tg)[i] * 2));
           const char *note = "";
           if (id(mode) == 1) note = "Сейчас режим «Ушёл»: держим температуру «Ушёл»";
-          else if (id(night_active)) note = "Сейчас ночь: держим ночную температуру";
+          else if (id(night_active) && id(night_rm)[i]) note = "Сейчас ночь: держим ночную температуру";
           lv_label_set_text(id(r_note), note);
 
 # ---------- Связь с платой реле ----------
@@ -658,6 +667,7 @@ A('''
               - lvgl.page.show: main_page''')
 rows=[
  ("Ночной режим каждый день", None, None, "s_night"),
+ ("Ночью", None, None, "night_rooms"),
  ("Ночь начинается", "id(n_start) = (id(n_start) + 23) % 24;", "id(n_start) = (id(n_start) + 1) % 24;", "s_start"),
  ("Ночь заканчивается", "id(n_end) = (id(n_end) + 23) % 24;", "id(n_end) = (id(n_end) + 1) % 24;", "s_end"),
  ("Температура ночью", "id(night_t) = std::max(15.0f, id(night_t) - 0.5f);", "id(night_t) = std::min(30.0f, id(night_t) + 0.5f);", "s_nt"),
@@ -666,23 +676,40 @@ rows=[
  ("Фото при простое, смена", None, None, "s_foto"),
 ]
 for k,(title,minus,plus,lid) in enumerate(rows):
-    y=58+k*60
+    y=58+k*52
     A(f'''        - obj:
             x: 10
             y: {y}
             width: 780
-            height: 56
+            height: 48
             styles: row_st
             scrollable: false
             widgets:
               - label: {{align: LEFT_MID, x: 10, text_font: f_mid, text_color: 0xFFFFFF, text: "{title}"}}''')
-    if lid == "s_foto":
+    if lid == "night_rooms":
+        # галочки по комнатам: синяя — комната ночью снижает температуру, серая — нет
+        short=["Балкон","Кухня","Детская","Спальня","Коридор","Ванная","Туалет"]
+        for i,nm in enumerate(short):
+            A(f'''              - button:
+                  id: b_nr{i}
+                  align: LEFT_MID
+                  x: {104+i*95}
+                  width: 91
+                  height: 38
+                  styles: btn_st
+                  pad_all: 2
+                  widgets:
+                    - label: {{align: CENTER, text_font: f_small, text: "{nm}"}}
+                  on_click:
+                    - lambda: 'id(night_rm)[{i}] = !id(night_rm)[{i}];'
+                    - script.execute: compute''')
+    elif lid == "s_foto":
         A('''              - button:
                   id: b_foto
                   align: RIGHT_MID
                   x: -6
                   width: 150
-                  height: 46
+                  height: 38
                   styles: btn_st
                   widgets:
                     - label: {id: s_foto, align: CENTER, text_font: f_mid, text: "30 с"}
@@ -698,7 +725,7 @@ for k,(title,minus,plus,lid) in enumerate(rows):
                   align: RIGHT_MID
                   x: -6
                   width: 150
-                  height: 46
+                  height: 38
                   styles: btn_st
                   widgets:
                     - label: {id: s_night, align: CENTER, text_font: f_mid, text: "Выкл"}
@@ -710,7 +737,7 @@ for k,(title,minus,plus,lid) in enumerate(rows):
                   align: RIGHT_MID
                   x: -200
                   width: 70
-                  height: 46
+                  height: 38
                   styles: btn_st
                   widgets:
                     - label: {{align: CENTER, text_font: f_mid, text: "-"}}
@@ -722,7 +749,7 @@ for k,(title,minus,plus,lid) in enumerate(rows):
                   align: RIGHT_MID
                   x: -6
                   width: 70
-                  height: 46
+                  height: 38
                   styles: btn_st
                   widgets:
                     - label: {{align: CENTER, text_font: f_mid, text: "+"}}
