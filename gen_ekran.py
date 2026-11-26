@@ -67,7 +67,7 @@ http_request:
 
 online_image:
   - id: foto
-    url: "http://192.168.1.110:8123/local/ekran/foto1.jpg"
+    url: "http://192.168.1.110/local/ekran/foto1.jpg"
     format: JPEG
     type: RGB565
     resize: 800x480
@@ -89,7 +89,7 @@ online_image:
             - lambda: 'id(foto_n) = 1; id(foto_tick) = 0;'
             - online_image.set_url:
                 id: foto
-                url: !lambda 'return std::string("http://192.168.1.110:8123/local/ekran/foto1.jpg");'
+                url: !lambda 'return std::string("http://192.168.1.110/local/ekran/foto1.jpg");'
           else:
             # нет даже foto1 (или сервер выключен) — просто гасим экран, как раньше
             - if:
@@ -296,7 +296,7 @@ script:
             - lvgl.page.show: foto_page
             - online_image.set_url:
                 id: foto
-                url: !lambda 'return "http://192.168.1.110:8123/local/ekran/foto" + to_string(id(foto_n)) + ".jpg";'
+                url: !lambda 'return "http://192.168.1.110/local/ekran/foto" + to_string(id(foto_n)) + ".jpg";'
           else:
             - script.execute: foto_dark
   - id: foto_dark
@@ -362,7 +362,7 @@ interval:
                         - lambda: 'id(foto_tick) = 0; id(foto_n)++;'
                         - online_image.set_url:
                             id: foto
-                            url: !lambda 'return "http://192.168.1.110:8123/local/ekran/foto" + to_string(id(foto_n)) + ".jpg";'
+                            url: !lambda 'return "http://192.168.1.110/local/ekran/foto" + to_string(id(foto_n)) + ".jpg";'
 
 sensor:''')
 for i in range(1,8):
