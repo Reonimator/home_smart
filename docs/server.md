@@ -115,6 +115,15 @@ packages:
 4. Home Assistant → Настройки → Устройства и службы: появится «ekran» → Настроить → ввести тот же ключ.
 
 `reboot_timeout: 0s` — экран не перезагружается, если сервер выключен. Пол работает и без Home Assistant.
+### Консоль Home Assistant с копированием и вставкой
+Консоль VM в Proxmox (noVNC) вставку не принимает. Вместо неё: PowerShell → `ssh root@192.168.1.10` → `qm terminal 100` (выход Ctrl+O), логин `root` без пароля → `#`.
+Последовательный порт уже добавлен (`qm set 100 -serial0 socket`, 26.11). В браузере: VM 100 → Console ▾ → xterm.js (одновременно только одно окно).
+
+### Заметки 26.11
+- HA слушает порт **80**: `http://192.168.1.110` (не 8123).
+- Вход без пароля из 192.168.1.0/24 (`auth_providers: trusted_networks`, `allow_bypass_login`). **Перед выводом в интернет через прокси** обязательно `http: use_x_forwarded_for: true` + `trusted_proxies: [IP прокси]`, иначе внешние посетители войдут без пароля.
+- VM не стартовала («KVM virtualisation configured, but not available») — в BIOS сбросился VT-x. Если повторяется — батарейка BIOS (CR2032); держать ноутбук на зарядке.
+
 ### Прошивка Нептуна с сервера
 
 Так же, как экран. Секреты `wifi_ssid`, `wifi_password`, `ap_password` уже есть.
