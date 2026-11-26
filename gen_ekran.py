@@ -284,11 +284,30 @@ text_sensor:
     update_interval: 30s
     lambda: |-
       if (id(mode) == 1) return std::string("Ушёл");
-      return std::string(id(night_active) ? "Дома, ночь" : "Дома");''')
+      return std::string(id(night_active) ? "Дома, ночь" : "Дома");
+  # Состояние воды от Нептуна — для Home Assistant
+  - platform: template
+    name: "Вода (water)"
+    update_interval: 5s
+    lambda: |-
+      bool nl = id(np_link).has_state() && id(np_link).state;
+      if (!nl) return std::string("нет связи");
+      if (id(np_leak).has_state() && id(np_leak).state) return std::string("протечка");
+      if (id(np_closing).has_state() && id(np_closing).state) return std::string("закрывается");
+      if (id(np_opening).has_state() && id(np_opening).state) return std::string("открывается");
+      return std::string(id(np_closed).has_state() && id(np_closed).state ? "закрыта" : "открыта");''')
 A('''
 # ---------- Управление из Home Assistant ----------
 # Цели только в пределах 15–35°. Режим «Дома» из HA воду НЕ открывает
 # (вода из сети — только закрыть; открыть можно только кнопкой на экране).
+# Из HA воду можно только ЗАКРЫТЬ (например, по беспроводному датчику протечки).
+button:
+  - platform: template
+    name: "Закрыть воду (close)"
+    on_press:
+      - lambda: 'id(wcmd) = 1; id(wseq)++;'
+      - script.execute: compute
+
 select:
   - platform: template
     name: "Режим пола"
