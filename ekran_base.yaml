@@ -1,7 +1,8 @@
 # СГЕНЕРИРОВАНО gen_ekran.py — не править руками. Пароли приходят через substitutions
 # из ekran.yaml (esp.bat) или из конфигурации на домашнем сервере (см. docs/server.md).
 # Пульт тёплого пола v2: ESP32-8048S070C (7", 800x480)
-# Режимы Дома/Ушёл, ночной режим, страница комнаты, настройки, вода (Нептун по UDP)
+# Режимы Дома/Ушёл, ночной режим, страница комнаты, настройки, вода (Нептун по UDP),
+# фотогалерея при простое (фото с Home Assistant)
 
 esphome:
   name: ekran
@@ -52,6 +53,49 @@ time:
     timezone: MSK-3
     on_time_sync:
       - script.execute: upd_clock
+
+# ---------- Фотогалерея при простое ----------
+# Фото лежат на Home Assistant в папке /config/www/ekran/ под именами foto1.jpg, foto2.jpg, ...
+# (подготовить можно скриптом tools/foto.py: 800x480, обычный, не progressive JPEG).
+# HA отдаёт папку www по адресу /local/ без пароля, только внутри домашней сети.
+# Экран берёт foto1, foto2, ... по очереди; когда следующего номера нет — снова foto1.
+# Слот microSD на плате есть, но ESPHome не умеет читать с него файлы, поэтому фото по сети.
+http_request:
+  verify_ssl: false
+  timeout: 15s
+
+online_image:
+  - id: foto
+    url: "http://192.168.1.110:8123/local/ekran/foto1.jpg"
+    format: JPEG
+    type: RGB565
+    resize: 800x480
+    on_download_finished:
+      - if:
+          condition:
+            lambda: 'return id(foto_on);'
+          then:
+            - lambda: 'id(foto_have) = true;'
+            - lvgl.image.update:
+                id: foto_img
+                src: foto
+    on_error:
+      - if:
+          condition:
+            lambda: 'return id(foto_on) && id(foto_n) > 1;'
+          then:
+            # следующего номера нет — по кругу с первого
+            - lambda: 'id(foto_n) = 1; id(foto_tick) = 0;'
+            - online_image.set_url:
+                id: foto
+                url: !lambda 'return std::string("http://192.168.1.110:8123/local/ekran/foto1.jpg");'
+          else:
+            # нет даже foto1 (или сервер выключен) — просто гасим экран, как раньше
+            - if:
+                condition:
+                  lambda: 'return id(foto_on);'
+                then:
+                  - script.execute: foto_dark
 
 font:
   - {file: "gfonts://Roboto", id: f_small, size: 20, glyphsets: [GF_Latin_Core, GF_Cyrillic_Core]}
@@ -104,6 +148,14 @@ touchscreen:
             - lvgl.resume:
             - lvgl.widget.redraw:
             - light.turn_on: backlight
+      # касание во время фотогалереи — обратно на главный экран
+      - if:
+          condition:
+            lambda: 'return id(foto_on);'
+          then:
+            - lambda: 'id(foto_on) = false;'
+            - lvgl.page.show: main_page
+            - script.execute: refresh
 
 # ---------- Память ----------
 globals:
@@ -118,6 +170,12 @@ globals:
   - {id: night_t, type: float, restore_value: true, initial_value: '22'}
   - {id: away_t, type: float, restore_value: true, initial_value: '15'}
   - {id: sleep_min, type: int, restore_value: true, initial_value: '2'}
+  # фотогалерея: смена фото раз в foto_iv секунд, 0 — выключена (экран просто гаснет)
+  - {id: foto_iv, type: int, restore_value: true, initial_value: '30'}
+  - {id: foto_on, type: bool, initial_value: 'false'}
+  - {id: foto_have, type: bool, initial_value: 'false'}
+  - {id: foto_n, type: int, initial_value: '1'}
+  - {id: foto_tick, type: int, initial_value: '0'}
   - {id: wcmd, type: int, restore_value: true, initial_value: '0'}
   # номер команды воды: Нептун выполняет команду только когда номер меняется (нажатие),
   # поэтому перезагрузка экрана или Нептуна сама воду не откроет
@@ -205,6 +263,10 @@ script:
           snprintf(b, sizeof(b), "%.1f°", id(night_t)); ST(id(s_nt), b);
           snprintf(b, sizeof(b), "%.1f°", id(away_t)); ST(id(s_at), b);
           snprintf(b, sizeof(b), "%d мин", id(sleep_min)); ST(id(s_sl), b);
+          if (id(foto_iv) <= 0) ST(id(s_foto), "Выкл");
+          else if (id(foto_iv) < 60) { snprintf(b, sizeof(b), "%d с", id(foto_iv)); ST(id(s_foto), b); }
+          else { snprintf(b, sizeof(b), "%d мин", id(foto_iv) / 60); ST(id(s_foto), b); }
+          BG(id(b_foto), id(foto_iv) > 0 ? 0x185FA5 : 0x455A64);
   - id: upd_clock
     then:
       - lambda: |-
@@ -218,6 +280,30 @@ script:
                         MN[t.month - 1], t.hour, t.minute);
           const char *c = lv_label_get_text(id(lclock));
           if (c == nullptr || strcmp(c, b) != 0) lv_label_set_text(id(lclock), b);
+          if (t.is_valid()) snprintf(b, sizeof(b), "%02d:%02d", t.hour, t.minute);
+          c = lv_label_get_text(id(lfclock));
+          if (c == nullptr || strcmp(c, b) != 0) lv_label_set_text(id(lfclock), b);
+  # Простой: фотогалерея, а ночью (ночной режим) и в режиме «Ушёл» — просто гасим экран
+  - id: foto_start
+    then:
+      - if:
+          condition:
+            lambda: 'return id(foto_iv) > 0 && id(mode) == 0 && !id(night_active);'
+          then:
+            - lambda: 'id(foto_on) = true; id(foto_tick) = 0;'
+            - script.execute: upd_clock
+            - lvgl.page.show: foto_page
+            - online_image.set_url:
+                id: foto
+                url: !lambda 'return "http://192.168.1.110:8123/local/ekran/foto" + to_string(id(foto_n)) + ".jpg";'
+          else:
+            - script.execute: foto_dark
+  - id: foto_dark
+    then:
+      - lambda: 'id(foto_on) = false;'
+      - lvgl.page.show: main_page
+      - light.turn_off: backlight
+      - lvgl.pause:
   - id: room_open
     then:
       - lambda: |-
@@ -255,6 +341,27 @@ interval:
   - interval: 2s
     then:
       - script.execute: refresh
+  # Фотогалерея: следующее фото раз в foto_iv секунд; с наступлением ночи или «Ушёл» — гасим
+  - interval: 1s
+    then:
+      - if:
+          condition:
+            lambda: 'return id(foto_on);'
+          then:
+            - if:
+                condition:
+                  lambda: 'return id(foto_iv) <= 0 || id(mode) != 0 || id(night_active);'
+                then:
+                  - script.execute: foto_dark
+                else:
+                  - if:
+                      condition:
+                        lambda: 'return ++id(foto_tick) >= id(foto_iv);'
+                      then:
+                        - lambda: 'id(foto_tick) = 0; id(foto_n)++;'
+                        - online_image.set_url:
+                            id: foto
+                            url: !lambda 'return "http://192.168.1.110:8123/local/ekran/foto" + to_string(id(foto_n)) + ".jpg";'
 
 sensor:
   - {platform: template, id: set1, internal: true, update_interval: 60s, lambda: 'return id(eff)[0];'}
@@ -588,8 +695,7 @@ lvgl:
   on_idle:
     timeout: !lambda "return id(sleep_min) * 60000;"
     then:
-      - light.turn_off: backlight
-      - lvgl.pause:
+      - script.execute: foto_start
   style_definitions:
     - {id: tile_st, bg_color: 0x263238, bg_opa: COVER, radius: 14, border_width: 0, pad_all: 6}
     - {id: btn_st, bg_color: 0x455A64, radius: 10, shadow_width: 0}
@@ -874,9 +980,9 @@ lvgl:
               - lvgl.page.show: main_page
         - obj:
             x: 10
-            y: 62
+            y: 58
             width: 780
-            height: 62
+            height: 56
             styles: row_st
             scrollable: false
             widgets:
@@ -886,7 +992,7 @@ lvgl:
                   align: RIGHT_MID
                   x: -6
                   width: 150
-                  height: 50
+                  height: 46
                   styles: btn_st
                   widgets:
                     - label: {id: s_night, align: CENTER, text_font: f_mid, text: "Выкл"}
@@ -895,9 +1001,9 @@ lvgl:
                     - script.execute: compute
         - obj:
             x: 10
-            y: 130
+            y: 118
             width: 780
-            height: 62
+            height: 56
             styles: row_st
             scrollable: false
             widgets:
@@ -906,7 +1012,7 @@ lvgl:
                   align: RIGHT_MID
                   x: -200
                   width: 70
-                  height: 50
+                  height: 46
                   styles: btn_st
                   widgets:
                     - label: {align: CENTER, text_font: f_mid, text: "-"}
@@ -918,7 +1024,7 @@ lvgl:
                   align: RIGHT_MID
                   x: -6
                   width: 70
-                  height: 50
+                  height: 46
                   styles: btn_st
                   widgets:
                     - label: {align: CENTER, text_font: f_mid, text: "+"}
@@ -927,9 +1033,9 @@ lvgl:
                     - script.execute: compute
         - obj:
             x: 10
-            y: 198
+            y: 178
             width: 780
-            height: 62
+            height: 56
             styles: row_st
             scrollable: false
             widgets:
@@ -938,7 +1044,7 @@ lvgl:
                   align: RIGHT_MID
                   x: -200
                   width: 70
-                  height: 50
+                  height: 46
                   styles: btn_st
                   widgets:
                     - label: {align: CENTER, text_font: f_mid, text: "-"}
@@ -950,7 +1056,7 @@ lvgl:
                   align: RIGHT_MID
                   x: -6
                   width: 70
-                  height: 50
+                  height: 46
                   styles: btn_st
                   widgets:
                     - label: {align: CENTER, text_font: f_mid, text: "+"}
@@ -959,9 +1065,9 @@ lvgl:
                     - script.execute: compute
         - obj:
             x: 10
-            y: 266
+            y: 238
             width: 780
-            height: 62
+            height: 56
             styles: row_st
             scrollable: false
             widgets:
@@ -970,7 +1076,7 @@ lvgl:
                   align: RIGHT_MID
                   x: -200
                   width: 70
-                  height: 50
+                  height: 46
                   styles: btn_st
                   widgets:
                     - label: {align: CENTER, text_font: f_mid, text: "-"}
@@ -982,7 +1088,7 @@ lvgl:
                   align: RIGHT_MID
                   x: -6
                   width: 70
-                  height: 50
+                  height: 46
                   styles: btn_st
                   widgets:
                     - label: {align: CENTER, text_font: f_mid, text: "+"}
@@ -991,9 +1097,9 @@ lvgl:
                     - script.execute: compute
         - obj:
             x: 10
-            y: 334
+            y: 298
             width: 780
-            height: 62
+            height: 56
             styles: row_st
             scrollable: false
             widgets:
@@ -1002,7 +1108,7 @@ lvgl:
                   align: RIGHT_MID
                   x: -200
                   width: 70
-                  height: 50
+                  height: 46
                   styles: btn_st
                   widgets:
                     - label: {align: CENTER, text_font: f_mid, text: "-"}
@@ -1014,7 +1120,7 @@ lvgl:
                   align: RIGHT_MID
                   x: -6
                   width: 70
-                  height: 50
+                  height: 46
                   styles: btn_st
                   widgets:
                     - label: {align: CENTER, text_font: f_mid, text: "+"}
@@ -1023,9 +1129,9 @@ lvgl:
                     - script.execute: compute
         - obj:
             x: 10
-            y: 402
+            y: 358
             width: 780
-            height: 62
+            height: 56
             styles: row_st
             scrollable: false
             widgets:
@@ -1034,7 +1140,7 @@ lvgl:
                   align: RIGHT_MID
                   x: -200
                   width: 70
-                  height: 50
+                  height: 46
                   styles: btn_st
                   widgets:
                     - label: {align: CENTER, text_font: f_mid, text: "-"}
@@ -1046,10 +1152,53 @@ lvgl:
                   align: RIGHT_MID
                   x: -6
                   width: 70
-                  height: 50
+                  height: 46
                   styles: btn_st
                   widgets:
                     - label: {align: CENTER, text_font: f_mid, text: "+"}
                   on_click:
                     - lambda: 'id(sleep_min) = std::min(30, id(sleep_min) + 1);'
                     - script.execute: compute
+        - obj:
+            x: 10
+            y: 418
+            width: 780
+            height: 56
+            styles: row_st
+            scrollable: false
+            widgets:
+              - label: {align: LEFT_MID, x: 10, text_font: f_mid, text_color: 0xFFFFFF, text: "Фото при простое, смена"}
+              - button:
+                  id: b_foto
+                  align: RIGHT_MID
+                  x: -6
+                  width: 150
+                  height: 46
+                  styles: btn_st
+                  widgets:
+                    - label: {id: s_foto, align: CENTER, text_font: f_mid, text: "30 с"}
+                  on_click:
+                    # Выкл -> 10 с -> 30 с -> 1 мин -> 5 мин -> Выкл
+                    - lambda: |-
+                        int v = id(foto_iv);
+                        id(foto_iv) = v <= 0 ? 10 : v < 30 ? 30 : v < 60 ? 60 : v < 300 ? 300 : 0;
+                    - script.execute: refresh
+
+    - id: foto_page
+      skip: true
+      bg_color: 0x000000
+      scrollable: false
+      widgets:
+        - image: {id: foto_img, align: CENTER, src: foto}
+        - label:
+            id: lfclock
+            align: BOTTOM_RIGHT
+            x: -16
+            y: -12
+            text_font: f_big
+            text_color: 0xFFFFFF
+            bg_color: 0x000000
+            bg_opa: 40%
+            radius: 10
+            pad_all: 6
+            text: "--:--"
