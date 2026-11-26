@@ -106,7 +106,7 @@ binary_sensor:
 
 button:
   - platform: template
-    name: "Закрыть воду"
+    name: "Закрыть воду (close)"
     on_press:
       - lambda: |-
           if (id(hr0).state != 0x4E42) {
@@ -119,7 +119,7 @@ button:
           id(nep)->queue_command(modbus_controller::ModbusCommandItem::create_write_multiple_command(id(nep), 10, 1, data));
           ESP_LOGW("neptun", "Команда: ЗАКРЫТЬ воду (HR10 = %u)", data[0]);
   - platform: template
-    name: "Открыть воду (только без протечки)"
+    name: "Открыть воду (open, только без протечки)"
     on_press:
       - lambda: |-
           if (id(hr0).state != 0x4E42 || std::isnan(id(hr11).state) || std::isnan(id(hr10).state)) {
