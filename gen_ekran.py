@@ -193,8 +193,12 @@ script:
           bool nl = id(np_link).has_state() && id(np_link).state;
           bool leak = nl && id(np_leak).has_state() && id(np_leak).state;
           bool closed = nl && id(np_closed).has_state() && id(np_closed).state;
-          ST(id(lwater), !nl ? "нет связи" : leak ? "ПРОТЕЧКА!" : closed ? "закрыта" : "открыта");
-          BG(id(tilew), !nl ? 0x37474F : leak ? 0xA32D2D : closed ? 0x0C447C : 0x263238);
+          bool closing = nl && id(np_closing).has_state() && id(np_closing).state;
+          bool opening = nl && id(np_opening).has_state() && id(np_opening).state;
+          ST(id(lwater), !nl ? "нет связи" : leak ? "ПРОТЕЧКА!" : closing ? "закрывается..." :
+                         opening ? "открывается..." : closed ? "закрыта" : "открыта");
+          BG(id(tilew), !nl ? 0x37474F : leak ? 0xA32D2D : (closing || opening) ? 0x8A6D1F :
+                        closed ? 0x0C447C : 0x263238);
           ST(id(s_night), id(night_on) ? "Вкл" : "Выкл");
           BG(id(b_night), id(night_on) ? 0x185FA5 : 0x455A64);
           snprintf(b, sizeof(b), "%02d:00", id(n_start)); ST(id(s_start), b);
@@ -337,6 +341,8 @@ A('''  - platform: packet_transport
   - {platform: packet_transport, provider: neptun, remote_id: np_link, id: np_link, internal: true, on_state: [script.execute: refresh]}
   - {platform: packet_transport, provider: neptun, remote_id: np_leak, id: np_leak, internal: true, on_state: [script.execute: refresh]}
   - {platform: packet_transport, provider: neptun, remote_id: np_closed, id: np_closed, internal: true, on_state: [script.execute: refresh]}
+  - {platform: packet_transport, provider: neptun, remote_id: np_closing, id: np_closing, internal: true, on_state: [script.execute: refresh]}
+  - {platform: packet_transport, provider: neptun, remote_id: np_opening, id: np_opening, internal: true, on_state: [script.execute: refresh]}
 
 # ---------- Интерфейс ----------
 lvgl:
