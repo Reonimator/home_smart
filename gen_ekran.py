@@ -2,7 +2,8 @@ rooms=["Балкон","Кухня","Детская","Спальня","Корид
 L=[]
 A=L.append
 A('''# Пульт тёплого пола v2: ESP32-8048S070C (7", 800x480)
-# Режимы Дома/Ушёл, ночной режим, страница комнаты, настройки, вода (Нептун по UDP)
+# Режимы Дома/Ушёл, ночной режим, страница комнаты, настройки, вода (Нептун по UDP),
+# фотогалерея при простое (фото с Home Assistant)
 
 esphome:
   name: ekran
@@ -53,6 +54,49 @@ time:
     timezone: MSK-3
     on_time_sync:
       - script.execute: upd_clock
+
+# ---------- Фотогалерея при простое ----------
+# Фото лежат на Home Assistant в папке /config/www/ekran/ под именами foto1.jpg, foto2.jpg, ...
+# (подготовить можно скриптом tools/foto.py: 800x480, обычный, не progressive JPEG).
+# HA отдаёт папку www по адресу /local/ без пароля, только внутри домашней сети.
+# Экран берёт foto1, foto2, ... по очереди; когда следующего номера нет — снова foto1.
+# Слот microSD на плате есть, но ESPHome не умеет читать с него файлы, поэтому фото по сети.
+http_request:
+  verify_ssl: false
+  timeout: 15s
+
+online_image:
+  - id: foto
+    url: "http://192.168.1.110:8123/local/ekran/foto1.jpg"
+    format: JPEG
+    type: RGB565
+    resize: 800x480
+    on_download_finished:
+      - if:
+          condition:
+            lambda: 'return id(foto_on);'
+          then:
+            - lambda: 'id(foto_have) = true;'
+            - lvgl.image.update:
+                id: foto_img
+                src: foto
+    on_error:
+      - if:
+          condition:
+            lambda: 'return id(foto_on) && id(foto_n) > 1;'
+          then:
+            # следующего номера нет — по кругу с первого
+            - lambda: 'id(foto_n) = 1; id(foto_tick) = 0;'
+            - online_image.set_url:
+                id: foto
+                url: !lambda 'return std::string("http://192.168.1.110:8123/local/ekran/foto1.jpg");'
+          else:
+            # нет даже foto1 (или сервер выключен) — просто гасим экран, как раньше
+            - if:
+                condition:
+                  lambda: 'return id(foto_on);'
+                then:
+                  - script.execute: foto_dark
 
 font:
   - {file: "gfonts://Roboto", id: f_small, size: 20, glyphsets: [GF_Latin_Core, GF_Cyrillic_Core]}
@@ -105,6 +149,14 @@ touchscreen:
             - lvgl.resume:
             - lvgl.widget.redraw:
             - light.turn_on: backlight
+      # касание во время фотогалереи — обратно на главный экран
+      - if:
+          condition:
+            lambda: 'return id(foto_on);'
+          then:
+            - lambda: 'id(foto_on) = false;'
+            - lvgl.page.show: main_page
+            - script.execute: refresh
 
 # ---------- Память ----------
 globals:
@@ -119,6 +171,12 @@ globals:
   - {id: night_t, type: float, restore_value: true, initial_value: '22'}
   - {id: away_t, type: float, restore_value: true, initial_value: '15'}
   - {id: sleep_min, type: int, restore_value: true, initial_value: '2'}
+  # фотогалерея: смена фото раз в foto_iv секунд, 0 — выключена (экран просто гаснет)
+  - {id: foto_iv, type: int, restore_value: true, initial_value: '30'}
+  - {id: foto_on, type: bool, initial_value: 'false'}
+  - {id: foto_have, type: bool, initial_value: 'false'}
+  - {id: foto_n, type: int, initial_value: '1'}
+  - {id: foto_tick, type: int, initial_value: '0'}
   - {id: wcmd, type: int, restore_value: true, initial_value: '0'}
   # номер команды воды: Нептун выполняет команду только когда номер меняется (нажатие),
   # поэтому перезагрузка экрана или Нептуна сама воду не откроет
@@ -206,6 +264,10 @@ script:
           snprintf(b, sizeof(b), "%.1f°", id(night_t)); ST(id(s_nt), b);
           snprintf(b, sizeof(b), "%.1f°", id(away_t)); ST(id(s_at), b);
           snprintf(b, sizeof(b), "%d мин", id(sleep_min)); ST(id(s_sl), b);
+          if (id(foto_iv) <= 0) ST(id(s_foto), "Выкл");
+          else if (id(foto_iv) < 60) { snprintf(b, sizeof(b), "%d с", id(foto_iv)); ST(id(s_foto), b); }
+          else { snprintf(b, sizeof(b), "%d мин", id(foto_iv) / 60); ST(id(s_foto), b); }
+          BG(id(b_foto), id(foto_iv) > 0 ? 0x185FA5 : 0x455A64);
   - id: upd_clock
     then:
       - lambda: |-
@@ -219,6 +281,30 @@ script:
                         MN[t.month - 1], t.hour, t.minute);
           const char *c = lv_label_get_text(id(lclock));
           if (c == nullptr || strcmp(c, b) != 0) lv_label_set_text(id(lclock), b);
+          if (t.is_valid()) snprintf(b, sizeof(b), "%02d:%02d", t.hour, t.minute);
+          c = lv_label_get_text(id(lfclock));
+          if (c == nullptr || strcmp(c, b) != 0) lv_label_set_text(id(lfclock), b);
+  # Простой: фотогалерея, а ночью (ночной режим) и в режиме «Ушёл» — просто гасим экран
+  - id: foto_start
+    then:
+      - if:
+          condition:
+            lambda: 'return id(foto_iv) > 0 && id(mode) == 0 && !id(night_active);'
+          then:
+            - lambda: 'id(foto_on) = true; id(foto_tick) = 0;'
+            - script.execute: upd_clock
+            - lvgl.page.show: foto_page
+            - online_image.set_url:
+                id: foto
+                url: !lambda 'return "http://192.168.1.110:8123/local/ekran/foto" + to_string(id(foto_n)) + ".jpg";'
+          else:
+            - script.execute: foto_dark
+  - id: foto_dark
+    then:
+      - lambda: 'id(foto_on) = false;'
+      - lvgl.page.show: main_page
+      - light.turn_off: backlight
+      - lvgl.pause:
   - id: room_open
     then:
       - lambda: |-
@@ -256,6 +342,27 @@ interval:
   - interval: 2s
     then:
       - script.execute: refresh
+  # Фотогалерея: следующее фото раз в foto_iv секунд; с наступлением ночи или «Ушёл» — гасим
+  - interval: 1s
+    then:
+      - if:
+          condition:
+            lambda: 'return id(foto_on);'
+          then:
+            - if:
+                condition:
+                  lambda: 'return id(foto_iv) <= 0 || id(mode) != 0 || id(night_active);'
+                then:
+                  - script.execute: foto_dark
+                else:
+                  - if:
+                      condition:
+                        lambda: 'return ++id(foto_tick) >= id(foto_iv);'
+                      then:
+                        - lambda: 'id(foto_tick) = 0; id(foto_n)++;'
+                        - online_image.set_url:
+                            id: foto
+                            url: !lambda 'return "http://192.168.1.110:8123/local/ekran/foto" + to_string(id(foto_n)) + ".jpg";'
 
 sensor:''')
 for i in range(1,8):
@@ -371,8 +478,7 @@ lvgl:
   on_idle:
     timeout: !lambda "return id(sleep_min) * 60000;"
     then:
-      - light.turn_off: backlight
-      - lvgl.pause:
+      - script.execute: foto_start
   style_definitions:
     - {id: tile_st, bg_color: 0x263238, bg_opa: COVER, radius: 14, border_width: 0, pad_all: 6}
     - {id: btn_st, bg_color: 0x455A64, radius: 10, shadow_width: 0}
@@ -557,25 +663,42 @@ rows=[
  ("Температура ночью", "id(night_t) = std::max(15.0f, id(night_t) - 0.5f);", "id(night_t) = std::min(30.0f, id(night_t) + 0.5f);", "s_nt"),
  ("Температура «Ушёл»", "id(away_t) = std::max(5.0f, id(away_t) - 0.5f);", "id(away_t) = std::min(20.0f, id(away_t) + 0.5f);", "s_at"),
  ("Гасить экран через", "id(sleep_min) = std::max(1, id(sleep_min) - 1);", "id(sleep_min) = std::min(30, id(sleep_min) + 1);", "s_sl"),
+ ("Фото при простое, смена", None, None, "s_foto"),
 ]
 for k,(title,minus,plus,lid) in enumerate(rows):
-    y=62+k*68
+    y=58+k*60
     A(f'''        - obj:
             x: 10
             y: {y}
             width: 780
-            height: 62
+            height: 56
             styles: row_st
             scrollable: false
             widgets:
               - label: {{align: LEFT_MID, x: 10, text_font: f_mid, text_color: 0xFFFFFF, text: "{title}"}}''')
-    if minus is None:
+    if lid == "s_foto":
+        A('''              - button:
+                  id: b_foto
+                  align: RIGHT_MID
+                  x: -6
+                  width: 150
+                  height: 46
+                  styles: btn_st
+                  widgets:
+                    - label: {id: s_foto, align: CENTER, text_font: f_mid, text: "30 с"}
+                  on_click:
+                    # Выкл -> 10 с -> 30 с -> 1 мин -> 5 мин -> Выкл
+                    - lambda: |-
+                        int v = id(foto_iv);
+                        id(foto_iv) = v <= 0 ? 10 : v < 30 ? 30 : v < 60 ? 60 : v < 300 ? 300 : 0;
+                    - script.execute: refresh''')
+    elif minus is None:
         A('''              - button:
                   id: b_night
                   align: RIGHT_MID
                   x: -6
                   width: 150
-                  height: 50
+                  height: 46
                   styles: btn_st
                   widgets:
                     - label: {id: s_night, align: CENTER, text_font: f_mid, text: "Выкл"}
@@ -587,7 +710,7 @@ for k,(title,minus,plus,lid) in enumerate(rows):
                   align: RIGHT_MID
                   x: -200
                   width: 70
-                  height: 50
+                  height: 46
                   styles: btn_st
                   widgets:
                     - label: {{align: CENTER, text_font: f_mid, text: "-"}}
@@ -599,13 +722,33 @@ for k,(title,minus,plus,lid) in enumerate(rows):
                   align: RIGHT_MID
                   x: -6
                   width: 70
-                  height: 50
+                  height: 46
                   styles: btn_st
                   widgets:
                     - label: {{align: CENTER, text_font: f_mid, text: "+"}}
                   on_click:
                     - lambda: '{plus}'
                     - script.execute: compute''')
+# фотогалерея при простое: касание в любом месте возвращает главный экран
+A('''
+    - id: foto_page
+      skip: true
+      bg_color: 0x000000
+      scrollable: false
+      widgets:
+        - image: {id: foto_img, align: CENTER, src: foto}
+        - label:
+            id: lfclock
+            align: BOTTOM_RIGHT
+            x: -16
+            y: -12
+            text_font: f_big
+            text_color: 0xFFFFFF
+            bg_color: 0x000000
+            bg_opa: 40%
+            radius: 10
+            pad_all: 6
+            text: "--:--"''')
 L.insert(0, "# СГЕНЕРИРОВАНО gen_ekran.py — не править руками. Пароли приходят через substitutions\n# из ekran.yaml (esp.bat) или из конфигурации на домашнем сервере (см. docs/server.md).")
 open('ekran_base.yaml','w',encoding='utf-8').write("\n".join(L)+"\n")
 open('ekran.yaml','w',encoding='utf-8').write('''# Экран для esp.bat: пароли из secrets.yaml, вся конфигурация — в ekran_base.yaml
