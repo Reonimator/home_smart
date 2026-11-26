@@ -10,7 +10,7 @@
 
 Затем содержимое папки вывода скопировать на Home Assistant в /config/www/ekran/
 (папку www создать, если её нет, и один раз перезапустить HA). Проверка в браузере:
-http://192.168.1.110:8123/local/ekran/foto1.jpg
+http://192.168.1.110/local/ekran/foto1.jpg
 
 * HEIC с айфона — только если установлен pillow-heif (pip install pillow-heif).
 """
