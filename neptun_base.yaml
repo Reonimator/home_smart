@@ -19,6 +19,7 @@
 #   Питание ESP32-C3: 5V и GND с разъёма прошивки платы реле
 
 substitutions:
+  move_s: "30"   # через сколько секунд после команды показывать краны закрытыми/открытыми (ход ~20 с)
   tx_pin: GPIO21
   rx_pin: GPIO20
 
@@ -159,24 +160,25 @@ binary_sensor:
   - platform: template
     id: np_closed
     internal: true
-    lambda: 'return !std::isnan(id(hr11).state) && (((uint16_t) id(hr11).state) & 0x0002);'
-  # Ход кранов: команда дана меньше 150 с назад (паспорт: 120 с), а Нептун ещё не сменил «закрыты».
-  # Флаг «закрыты» в HR11 Нептун меняет только в конце хода.
+    lambda: |-
+      // Краны идут ~20 с, а флаг «закрыты» в HR11 Нептун меняет только после 2 мин подачи питания.
+      // Поэтому через ${move_s} с после команды считаем краны в положении из команды.
+      uint32_t el = millis() - id(move_ms);
+      if (id(move_target) != -1 && el >= ${move_s}000UL && el < 150000UL) return id(move_target) == 1;
+      return !std::isnan(id(hr11).state) && (((uint16_t) id(hr11).state) & 0x0002);
+  # Ход кранов: первые ${move_s} с после команды (смена бита 1 в HR10), пока HR11 ещё старый.
   - platform: template
     id: np_closing
     internal: true
     lambda: |-
-      return id(move_target) == 1 && millis() - id(move_ms) < 150000 &&
+      return id(move_target) == 1 && millis() - id(move_ms) < ${move_s}000UL &&
              !std::isnan(id(hr11).state) && !(((uint16_t) id(hr11).state) & 0x0002);
   - platform: template
     id: np_opening
     internal: true
     lambda: |-
-      return id(move_target) == 0 && millis() - id(move_ms) < 150000 &&
+      return id(move_target) == 0 && millis() - id(move_ms) < ${move_s}000UL &&
              !std::isnan(id(hr11).state) && (((uint16_t) id(hr11).state) & 0x0002);
-  - {platform: modbus_controller, modbus_controller_id: nep, name: "Протечка", register_type: holding, address: 11, bitmask: 0x0001, device_class: moisture}
-  - {platform: modbus_controller, modbus_controller_id: nep, name: "Краны закрыты", register_type: holding, address: 11, bitmask: 0x0002}
-  - {platform: modbus_controller, modbus_controller_id: nep, name: "Сервис кранов идёт", register_type: holding, address: 11, bitmask: 0x0004}
 
 globals:
   - {id: last_ok, type: uint32_t, initial_value: '0'}
