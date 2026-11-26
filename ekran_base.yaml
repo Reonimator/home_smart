@@ -373,6 +373,8 @@ interval:
                             url: !lambda 'return "http://192.168.1.110/local/ekran/foto" + to_string(id(foto_n)) + ".jpg";'
 
 sensor:
+  # Сила Wi-Fi сигнала экрана (в Home Assistant): лучше −67 дБм, хуже −75 — обрывы прошивки
+  - {platform: wifi_signal, name: "Wi-Fi сигнал", update_interval: 60s}
   - {platform: template, id: set1, internal: true, update_interval: 60s, lambda: 'return id(eff)[0];'}
   - {platform: template, id: set2, internal: true, update_interval: 60s, lambda: 'return id(eff)[1];'}
   - {platform: template, id: set3, internal: true, update_interval: 60s, lambda: 'return id(eff)[2];'}
