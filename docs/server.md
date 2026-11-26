@@ -115,7 +115,28 @@ packages:
 4. Home Assistant → Настройки → Устройства и службы: появится «ekran» → Настроить → ввести тот же ключ.
 
 `reboot_timeout: 0s` — экран не перезагружается, если сервер выключен. Пол работает и без Home Assistant.
-Нептун подключим после того, как заработает связь по RS-485; кнопку «Открыть воду» в Home Assistant не выводим (вода из сети — только закрыть).
+### Прошивка Нептуна с сервера
+
+Так же, как экран. Секреты `wifi_ssid`, `wifi_password`, `ap_password` уже есть.
+ESPHome → **+ New device** → имя `neptun`, тип ESP32-C3 → пропустить установку → **Edit**, заменить всё на:
+
+```yaml
+substitutions:
+  wifi_ssid: !secret wifi_ssid
+  wifi_password: !secret wifi_password
+  ap_password: !secret ap_password
+
+packages:
+  neptun:
+    url: https://github.com/Reonimator/home_smart
+    ref: main
+    files: [neptun_base.yaml]
+    refresh: 0s
+```
+
+Save → **Install → Wirelessly** (плата на 192.168.1.77 уже в сети). В Home Assistant Нептун пока не добавляем (нет `api:`), управление — на его веб-странице.
+
+Связь по RS-485 заработала 26.11; кнопку «Открыть воду» в Home Assistant не выводим (вода из сети — только закрыть).
 
 ## 8. Потом
 
