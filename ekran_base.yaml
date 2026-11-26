@@ -1,7 +1,7 @@
 # СГЕНЕРИРОВАНО gen_ekran.py — не править руками. Пароли приходят через substitutions
 # из ekran.yaml (esp.bat) или из конфигурации на домашнем сервере (см. docs/server.md).
 # Пульт тёплого пола v2: ESP32-8048S070C (7", 800x480)
-# Режимы Дома/Ушёл, ночной режим, страница комнаты, настройки, вода (заготовка)
+# Режимы Дома/Ушёл, ночной режим, страница комнаты, настройки, вода (Нептун по UDP)
 
 esphome:
   name: ekran
@@ -119,6 +119,9 @@ globals:
   - {id: away_t, type: float, restore_value: true, initial_value: '15'}
   - {id: sleep_min, type: int, restore_value: true, initial_value: '2'}
   - {id: wcmd, type: int, restore_value: true, initial_value: '0'}
+  # номер команды воды: Нептун выполняет команду только когда номер меняется (нажатие),
+  # поэтому перезагрузка экрана или Нептуна сама воду не откроет
+  - {id: wseq, type: int, restore_value: true, initial_value: '0'}
   - {id: night_active, type: bool, initial_value: 'false'}
   - {id: boiler, type: bool, initial_value: 'false'}
   - {id: cur, type: int, initial_value: '0'}
@@ -142,7 +145,7 @@ script:
           id(set3).publish_state(id(eff)[2]); id(set4).publish_state(id(eff)[3]);
           id(set5).publish_state(id(eff)[4]); id(set6).publish_state(id(eff)[5]);
           id(set7).publish_state(id(eff)[6]);
-          id(water_cmd).publish_state((float) id(wcmd));
+          id(water_req).publish_state((float) ((id(wseq) % 1000) * 2 + id(wcmd)));
       - script.execute: refresh
   - id: refresh
     then:
@@ -185,8 +188,12 @@ script:
           std::string st = id(boiler) ? "Котёл работает" : "Котёл ждёт";
           if (id(mode) == 0 && id(night_active)) st += "  ·  ночь";
           ST(id(lstatus), st.c_str());
-          ST(id(lwater), id(wcmd) ? "закрыта" : "открыта");
-          BG(id(tilew), id(wcmd) ? 0x0C447C : 0x263238);
+          // Вода: показываем реальное состояние Нептуна, а не последнюю команду
+          bool nl = id(np_link).has_state() && id(np_link).state;
+          bool leak = nl && id(np_leak).has_state() && id(np_leak).state;
+          bool closed = nl && id(np_closed).has_state() && id(np_closed).state;
+          ST(id(lwater), !nl ? "нет связи" : leak ? "ПРОТЕЧКА!" : closed ? "закрыта" : "открыта");
+          BG(id(tilew), !nl ? 0x37474F : leak ? 0xA32D2D : closed ? 0x0C447C : 0x263238);
           ST(id(s_night), id(night_on) ? "Вкл" : "Выкл");
           BG(id(b_night), id(night_on) ? 0x185FA5 : 0x455A64);
           snprintf(b, sizeof(b), "%02d:00", id(n_start)); ST(id(s_start), b);
@@ -229,9 +236,10 @@ udp:
 packet_transport:
   - platform: udp
     update_interval: 1s
-    sensors: [set1, set2, set3, set4, set5, set6, set7, water_cmd]
+    sensors: [set1, set2, set3, set4, set5, set6, set7, water_req]
     providers:
       - name: teplopol
+      - name: neptun
 
 interval:
   - interval: 20s
@@ -252,7 +260,7 @@ sensor:
   - {platform: template, id: set5, internal: true, update_interval: 60s, lambda: 'return id(eff)[4];'}
   - {platform: template, id: set6, internal: true, update_interval: 60s, lambda: 'return id(eff)[5];'}
   - {platform: template, id: set7, internal: true, update_interval: 60s, lambda: 'return id(eff)[6];'}
-  - {platform: template, id: water_cmd, internal: true, update_interval: 60s, lambda: 'return (float) id(wcmd);'}
+  - {platform: template, id: water_req, internal: true, update_interval: 60s, lambda: 'return (float) ((id(wseq) % 1000) * 2 + id(wcmd));'}
   - {platform: template, name: "Цель 1 Балкон", unit_of_measurement: "°C", device_class: temperature, accuracy_decimals: 1, update_interval: 30s, lambda: 'return id(eff)[0];'}
   - {platform: template, name: "Цель 2 Кухня", unit_of_measurement: "°C", device_class: temperature, accuracy_decimals: 1, update_interval: 30s, lambda: 'return id(eff)[1];'}
   - {platform: template, name: "Цель 3 Детская", unit_of_measurement: "°C", device_class: temperature, accuracy_decimals: 1, update_interval: 30s, lambda: 'return id(eff)[2];'}
@@ -371,7 +379,7 @@ select:
     lambda: 'return std::string(id(mode) == 1 ? "Ушёл" : "Дома");'
     set_action:
       - lambda: |-
-          if (x == "Ушёл") { id(mode) = 1; id(wcmd) = 1; }
+          if (x == "Ушёл") { id(mode) = 1; id(wcmd) = 1; id(wseq)++; }
           else { id(mode) = 0; }
       - script.execute: compute
 
@@ -542,6 +550,10 @@ binary_sensor:
     on_state:
       - lambda: 'id(boiler) = x;'
       - script.execute: refresh
+  # Нептун (ESP32-C3 по RS-485): реальное состояние воды
+  - {platform: packet_transport, provider: neptun, remote_id: np_link, id: np_link, internal: true, on_state: [script.execute: refresh]}
+  - {platform: packet_transport, provider: neptun, remote_id: np_leak, id: np_leak, internal: true, on_state: [script.execute: refresh]}
+  - {platform: packet_transport, provider: neptun, remote_id: np_closed, id: np_closed, internal: true, on_state: [script.execute: refresh]}
 
 # ---------- Интерфейс ----------
 lvgl:
@@ -586,7 +598,7 @@ lvgl:
             widgets:
               - label: {align: CENTER, text_font: f_mid, text: "Дома"}
             on_click:
-              - lambda: 'id(mode) = 0; id(wcmd) = 0;'
+              - lambda: 'id(mode) = 0; id(wcmd) = 0; id(wseq)++;'
               - script.execute: compute
         - button:
             id: btn_away
@@ -598,7 +610,7 @@ lvgl:
             widgets:
               - label: {align: CENTER, text_font: f_mid, text: "Ушёл"}
             on_click:
-              - lambda: 'id(mode) = 1; id(wcmd) = 1;'
+              - lambda: 'id(mode) = 1; id(wcmd) = 1; id(wseq)++;'
               - script.execute: compute
         - obj:
             id: tile1
@@ -738,7 +750,7 @@ lvgl:
                   widgets:
                     - label: {align: CENTER, text_font: f_small, text: "Закр."}
                   on_click:
-                    - lambda: 'id(wcmd) = 1;'
+                    - lambda: 'id(wcmd) = 1; id(wseq)++;'
                     - script.execute: compute
               - button:
                   align: BOTTOM_RIGHT
@@ -748,7 +760,7 @@ lvgl:
                   widgets:
                     - label: {align: CENTER, text_font: f_small, text: "Откр."}
                   on_click:
-                    - lambda: 'id(wcmd) = 0;'
+                    - lambda: 'id(wcmd) = 0; id(wseq)++;'
                     - script.execute: compute
 
     - id: room_page
