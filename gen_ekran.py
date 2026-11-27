@@ -76,20 +76,25 @@ online_image:
           condition:
             lambda: 'return id(foto_on);'
           then:
-            - lambda: 'id(foto_have) = true;'
+            - lambda: |-
+                ESP_LOGI("foto", "показано foto%d", id(foto_n));
+                id(foto_have) = true;
+                id(foto_n)++;  // в следующий раз — следующее
             - lvgl.image.update:
                 id: foto_img
                 src: foto
+      - lambda: 'id(foto_busy) = false;'
     on_error:
+      - lambda: 'id(foto_busy) = false;'
       - if:
           condition:
             lambda: 'return id(foto_on) && id(foto_n) > 1;'
           then:
-            # следующего номера нет — по кругу с первого
-            - lambda: 'id(foto_n) = 1; id(foto_tick) = 0;'
-            - online_image.set_url:
-                id: foto
-                url: !lambda 'return std::string("http://192.168.1.110/local/ekran/foto1.jpg");'
+            # следующего номера нет — по кругу с первого, через секунду (без вложенной загрузки)
+            - lambda: |-
+                ESP_LOGI("foto", "foto%d нет — снова с foto1", id(foto_n));
+                id(foto_n) = 1;
+                id(foto_tick) = id(foto_iv);
           else:
             # нет даже foto1 (или сервер выключен) — просто гасим экран, как раньше
             - if:
@@ -154,7 +159,7 @@ touchscreen:
           condition:
             lambda: 'return id(foto_on);'
           then:
-            - lambda: 'id(foto_on) = false;'
+            - lambda: 'id(foto_on) = false; id(foto_busy) = false;'
             - lvgl.page.show: main_page
             - script.execute: refresh
 
@@ -179,6 +184,7 @@ globals:
   - {id: foto_have, type: bool, initial_value: 'false'}
   - {id: foto_n, type: int, initial_value: '1'}
   - {id: foto_tick, type: int, initial_value: '0'}
+  - {id: foto_busy, type: bool, initial_value: 'false'}
   - {id: wcmd, type: int, restore_value: true, initial_value: '0'}
   # номер команды воды: Нептун выполняет команду только когда номер меняется (нажатие),
   # поэтому перезагрузка экрана или Нептуна сама воду не откроет
@@ -300,7 +306,7 @@ script:
           condition:
             lambda: 'return id(foto_iv) > 0 && id(mode) == 0 && !id(night_active);'
           then:
-            - lambda: 'id(foto_on) = true; id(foto_tick) = 0;'
+            - lambda: 'id(foto_on) = true; id(foto_tick) = 0; id(foto_busy) = true;'
             - script.execute: upd_clock
             - lvgl.page.show: foto_page
             - online_image.set_url:
@@ -366,9 +372,10 @@ interval:
                 else:
                   - if:
                       condition:
-                        lambda: 'return ++id(foto_tick) >= id(foto_iv);'
+                        # пока прошлое фото качается — ждём, номер не сдвигаем
+                        lambda: 'return ++id(foto_tick) >= id(foto_iv) && !id(foto_busy);'
                       then:
-                        - lambda: 'id(foto_tick) = 0; id(foto_n)++;'
+                        - lambda: 'id(foto_tick) = 0; id(foto_busy) = true;'
                         - online_image.set_url:
                             id: foto
                             url: !lambda 'return "http://192.168.1.110/local/ekran/foto" + to_string(id(foto_n)) + ".jpg";'
